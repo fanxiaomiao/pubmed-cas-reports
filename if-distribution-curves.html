@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>各分区IF分布曲线</title>
+</head>
+<body>
+<title>各分区IF分布曲线</title>
+<style>
+  .viz-root {
+    --surface-1: #fcfcfb; --page-plane: #f9f9f7; --text-primary: #0b0b0b;
+    --text-secondary: #52514e; --text-muted: #898781; --gridline: #e1e0d9;
+    --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --tier-1: #1c5cab; --tier-2: #2a78d6; --tier-3: #5598e7; --tier-4: #86b6ef;
+  }
+  @media (prefers-color-scheme: dark) {
+    .viz-root {
+      --surface-1: #1a1a19; --page-plane: #0d0d0d; --text-primary: #ffffff;
+      --text-secondary: #c3c2b7; --text-muted: #898781; --gridline: #2c2c2a;
+      --baseline: #383835; --border: rgba(255,255,255,0.10);
+      --tier-1: #1c5cab; --tier-2: #3987e5; --tier-3: #86b6ef; --tier-4: #cde2fb;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    --surface-1: #1a1a19; --page-plane: #0d0d0d; --text-primary: #ffffff;
+    --text-secondary: #c3c2b7; --text-muted: #898781; --gridline: #2c2c2a;
+    --baseline: #383835; --border: rgba(255,255,255,0.10);
+    --tier-1: #1c5cab; --tier-2: #3987e5; --tier-3: #86b6ef; --tier-4: #cde2fb;
+  }
+  :root[data-theme="light"] .viz-root {
+    --surface-1: #fcfcfb; --page-plane: #f9f9f7; --text-primary: #0b0b0b;
+    --text-secondary: #52514e; --text-muted: #898781; --gridline: #e1e0d9;
+    --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --tier-1: #1c5cab; --tier-2: #2a78d6; --tier-3: #5598e7; --tier-4: #86b6ef;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page-plane); color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .viz-root { max-width: 980px; margin: 0 auto; padding: 28px 20px 60px; }
+  h1 { font-size: 19px; font-weight: 600; margin: 0 0 4px; }
+  .subtitle { font-size: 13px; color: var(--text-secondary); margin: 0 0 24px; }
+
+  .summary-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;
+  }
+  .stat-tile {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .stat-tile .tier-tag {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+    color: var(--text-secondary); margin-bottom: 8px;
+  }
+  .stat-tile .dot { width: 9px; height: 9px; border-radius: 3px; }
+  .stat-tile .value { font-size: 22px; font-weight: 600; }
+  .stat-tile .sub { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; }
+
+  .grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  }
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 18px 10px;
+  }
+  .card h2 {
+    font-size: 14px; font-weight: 600; margin: 0 0 2px; display: flex; align-items: center; gap: 7px;
+  }
+  .card .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .card .desc { font-size: 11.5px; color: var(--text-muted); margin: 0 0 10px; }
+  svg { display: block; overflow: visible; width: 100%; height: auto; }
+  .axis-label { font-size: 10px; fill: var(--text-muted); }
+  .gridline { stroke: var(--gridline); stroke-width: 1; }
+  .baseline { stroke: var(--baseline); stroke-width: 1; }
+  .ref-line { stroke-dasharray: 3 3; stroke-width: 1.5; }
+  .ref-label { font-size: 10px; font-weight: 600; }
+  .hit-target { fill: transparent; }
+
+  .tooltip {
+    position: absolute; pointer-events: none; background: var(--text-primary); color: var(--surface-1);
+    font-size: 11.5px; line-height: 1.5; padding: 7px 9px; border-radius: 7px; opacity: 0;
+    transition: opacity 0.1s; white-space: nowrap; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  .note { font-size: 12px; color: var(--text-muted); margin-top: 18px; line-height: 1.7; }
+  @media (max-width: 640px) { .grid, .summary-row { grid-template-columns: 1fr; } }
+</style>
+
+<div class="viz-root">
+  <h1>各分区 IF 分布曲线</h1>
+  <p class="subtitle">IF 已用 JCR 2025 官方数据校正 · 104,822 篇匹配到分区且有IF的文献</p>
+
+  <div class="summary-row" id="summaryRow"></div>
+  <div class="grid" id="chartsGrid"></div>
+
+  <p class="note" id="overflowNote"></p>
+  <div class="tooltip" id="tooltip"></div>
+</div>
+
+<script>
+  const DATA = {"1": {"n": 24556, "xmax": 60, "binw": 1.0, "density": [0.0, 0.0, 0.0, 0.2443, 1.6249, 2.2398, 6.7356, 14.5463, 5.2655, 3.7099, 5.3185, 8.2994, 2.1624, 2.0647, 6.3854, 8.5112, 1.633, 1.9425, 7.5134, 0.167, 0.8104, 1.4823, 0.6394, 2.9809, 2.0158, 0.2484, 0.3747, 0.2932, 0.1751, 2.2235, 0.5701, 0.1303, 0.0, 0.1547, 0.0652, 0.0855, 0.0489, 0.5172, 0.0204, 0.7127, 0.2688, 0.0896, 0.1262, 0.0, 0.5416, 1.0222, 0.0733, 1.1891, 0.0122, 0.0, 0.0896, 0.0489, 0.7289, 0.0, 0.0244, 0.0855, 1.2869, 0.9122, 0.0, 0.0], "overflow_n": 390, "overflow_pct": 1.59, "mean": 17.17, "median": 12.8, "label": "1区"}, "2": {"n": 35650, "xmax": 15, "binw": 0.3, "density": [0.0, 0.0, 0.0, 0.0, 0.0187, 0.0, 0.346, 0.6639, 1.2155, 1.4306, 6.6667, 2.3001, 12.7349, 23.8897, 12.7443, 25.18, 10.3226, 17.3539, 49.4437, 53.8476, 12.8752, 16.7929, 4.7592, 23.899, 6.2085, 3.0108, 7.1248, 6.2085, 8.7798, 0.0, 2.5339, 0.2618, 3.0295, 0.72, 1.9074, 5.3763, 0.9163, 1.1875, 1.1594, 0.6732, 2.3095, 0.1122, 1.7204, 0.9911, 0.187, 0.0, 0.3086, 0.0, 0.2338, 0.0], "overflow_n": 202, "overflow_pct": 0.57, "mean": 6.01, "median": 5.7, "label": "2区"}, "3": {"n": 27197, "xmax": 9, "binw": 0.2, "density": [0.0, 0.0184, 0.0184, 0.0368, 0.2574, 0.2022, 0.4045, 0.2942, 3.0702, 4.927, 2.3532, 13.4758, 9.1922, 43.5158, 21.5649, 21.5833, 50.8696, 25.2418, 29.0106, 28.3671, 22.8886, 7.9972, 25.6462, 17.0056, 55.3554, 13.5309, 0.7538, 65.669, 13.0713, 2.4084, 3.254, 1.6546, 3.8056, 0.4964, 1.434, 0.0368, 0.3309, 0.0, 8.7877, 0.1103, 0.0919, 0.4045, 0.0184, 0.1103, 0.1287], "overflow_n": 33, "overflow_pct": 0.12, "mean": 4.17, "median": 4.0, "label": "3区"}, "4": {"n": 17419, "xmax": 7, "binw": 0.15, "density": [0.0383, 0.421, 5.3199, 5.0902, 9.9508, 7.4248, 14.7731, 7.5397, 23.0017, 10.7928, 27.6709, 17.3757, 40.9897, 41.9083, 51.9739, 21.9683, 75.7793, 19.1362, 57.9444, 48.5677, 19.2127, 31.9957, 27.3648, 24.1116, 13.1274, 5.2433, 8.0755, 4.784, 5.8557, 3.4828, 4.3631, 1.9902, 2.7173, 2.8704, 0.3062, 0.0, 1.6457, 0.0383, 0.0, 0.3062, 19.5572, 0.0383, 0.1148, 0.0, 0.0383, 0.3445], "overflow_n": 37, "overflow_pct": 0.21, "mean": 2.57, "median": 2.5, "label": "4区"}};
+  const tooltip = document.getElementById("tooltip");
+
+  function showTooltip(evt, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.opacity = 1;
+    const root = document.querySelector(".viz-root").getBoundingClientRect();
+    tooltip.style.left = (evt.clientX - root.left + 14) + "px";
+    tooltip.style.top = (evt.clientY - root.top - 10) + "px";
+  }
+  function hideTooltip() { tooltip.style.opacity = 0; }
+  function cssVar(name) {
+    return getComputedStyle(document.querySelector(".viz-root")).getPropertyValue(name).trim();
+  }
+
+  // ---- summary tiles ----
+  const summaryRow = document.getElementById("summaryRow");
+  [1,2,3,4].forEach(tier => {
+    const d = DATA[tier];
+    const tile = document.createElement("div");
+    tile.className = "stat-tile";
+    tile.innerHTML = `
+      <div class="tier-tag"><span class="dot" style="background:var(--tier-${tier})"></span>${d.label}</div>
+      <div class="value">${d.n.toLocaleString()} 篇</div>
+      <div class="sub">均值IF ${d.mean.toFixed(2)} · 中位数 ${d.median.toFixed(2)}</div>`;
+    summaryRow.appendChild(tile);
+  });
+
+  // ---- overflow note ----
+  const overflowParts = [1,2,3,4].map(t => {
+    const d = DATA[t];
+    return d.overflow_n > 0 ? `${d.label} ${d.overflow_n}篇(${d.overflow_pct}%)超出图示范围(IF>${d.xmax})未画出` : null;
+  }).filter(Boolean);
+  document.getElementById("overflowNote").textContent =
+    "说明：曲线为分区内的IF密度分布（频数/区间宽度，按每区文章数归一化，纵轴单位为“每单位IF的文章占比%”），横轴范围按各分区数据自适应。" +
+    (overflowParts.length ? " " + overflowParts.join("；") + "。" : "");
+
+  // ---- render one small-multiple curve chart ----
+  function renderChart(svg, d, tierColorVar) {
+    const W = 380, H = 220;
+    const marginL = 38, marginR = 14, marginT = 10, marginB = 30;
+    const plotW = W - marginL - marginR;
+    const plotH = H - marginT - marginB;
+
+    const xMax = d.xmax;
+    const yMax = Math.max(...d.density) * 1.15;
+    const binw = d.binw;
+
+    function xScale(v) { return marginL + (v / xMax) * plotW; }
+    function yScale(v) { return marginT + plotH - (v / yMax) * plotH; }
+
+    // gridlines (y)
+    const yTicks = 4;
+    for (let i = 0; i <= yTicks; i++) {
+      const v = (yMax / yTicks) * i;
+      const y = yScale(v);
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", marginL); line.setAttribute("x2", W - marginR);
+      line.setAttribute("y1", y); line.setAttribute("y2", y);
+      line.setAttribute("class", "gridline");
+      svg.appendChild(line);
+    }
+
+    // x ticks
+    const xTickCount = 5;
+    for (let i = 0; i <= xTickCount; i++) {
+      const v = (xMax / xTickCount) * i;
+      const x = xScale(v);
+      const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      label.setAttribute("x", x); label.setAttribute("y", H - marginB + 16);
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("class", "axis-label");
+      label.textContent = Math.round(v);
+      svg.appendChild(label);
+    }
+
+    // build smooth-ish path (linear through bin midpoints, area fill)
+    const color = cssVar(tierColorVar);
+    let pathD = "";
+    let areaD = "";
+    d.density.forEach((val, i) => {
+      const x = xScale(i * binw + binw / 2);
+      const y = yScale(val);
+      if (i === 0) { pathD += `M${x} ${y}`; areaD += `M${x} ${yScale(0)} L${x} ${y}`; }
+      else { pathD += ` L${x} ${y}`; areaD += ` L${x} ${y}`; }
+    });
+    const lastX = xScale((d.density.length - 1) * binw + binw / 2);
+    areaD += ` L${lastX} ${yScale(0)} Z`;
+
+    const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    area.setAttribute("d", areaD);
+    area.setAttribute("fill", color);
+    area.setAttribute("fill-opacity", "0.12");
+    area.setAttribute("stroke", "none");
+    svg.appendChild(area);
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    line.setAttribute("d", pathD);
+    line.setAttribute("fill", "none");
+    line.setAttribute("stroke", color);
+    line.setAttribute("stroke-width", "2");
+    line.setAttribute("stroke-linejoin", "round");
+    line.setAttribute("stroke-linecap", "round");
+    svg.appendChild(line);
+
+    // median reference line
+    if (d.median <= xMax) {
+      const mx = xScale(d.median);
+      const ref = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      ref.setAttribute("x1", mx); ref.setAttribute("x2", mx);
+      ref.setAttribute("y1", marginT); ref.setAttribute("y2", H - marginB);
+      ref.setAttribute("class", "ref-line");
+      ref.setAttribute("stroke", cssVar("--text-secondary"));
+      svg.appendChild(ref);
+
+      const refLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      refLabel.setAttribute("x", mx + 4); refLabel.setAttribute("y", marginT + 11);
+      refLabel.setAttribute("class", "ref-label");
+      refLabel.setAttribute("fill", cssVar("--text-secondary"));
+      refLabel.textContent = `中位数 ${d.median.toFixed(1)}`;
+      svg.appendChild(refLabel);
+    }
+
+    // baseline
+    const base = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    base.setAttribute("x1", marginL); base.setAttribute("x2", W - marginR);
+    base.setAttribute("y1", H - marginB); base.setAttribute("y2", H - marginB);
+    base.setAttribute("class", "baseline");
+    svg.appendChild(base);
+
+    // hover hit targets per bin
+    d.density.forEach((val, i) => {
+      const x0 = xScale(i * binw);
+      const x1 = xScale((i + 1) * binw);
+      const hit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      hit.setAttribute("x", x0); hit.setAttribute("y", marginT);
+      hit.setAttribute("width", Math.max(x1 - x0, 1)); hit.setAttribute("height", plotH);
+      hit.setAttribute("class", "hit-target");
+      hit.addEventListener("mousemove", (evt) => {
+        showTooltip(evt, `IF ${(i*binw).toFixed(2)}–${((i+1)*binw).toFixed(2)}<br>占比 ${(val*binw).toFixed(2)}%`);
+      });
+      hit.addEventListener("mouseleave", hideTooltip);
+      svg.appendChild(hit);
+    });
+  }
+
+  const grid = document.getElementById("chartsGrid");
+  [1,2,3,4].forEach(tier => {
+    const d = DATA[tier];
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <h2><span class="dot" style="background:var(--tier-${tier})"></span>${d.label} IF 分布（n=${d.n.toLocaleString()}）</h2>
+      <p class="desc">横轴 0–${d.xmax}，纵轴为密度（%/单位IF）</p>
+      <svg viewBox="0 0 380 220"></svg>`;
+    grid.appendChild(card);
+    const svg = card.querySelector("svg");
+    renderChart(svg, d, `--tier-${tier}`);
+  });
+</script>
+
+</body>
+</html>
