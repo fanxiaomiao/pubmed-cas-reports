@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>作者深度画像：职称 / 合作网络 / 近5年发文</title>
+<title>作者深度画像：机构 / 方向 / 职称 / 合作网络 / 近3年发文</title>
 </head>
 <body>
-<title>作者深度画像：职称 / 合作网络 / 近5年发文</title>
+<title>作者深度画像：机构 / 方向 / 职称 / 合作网络 / 近3年发文</title>
 <style>
   .viz-root {
     --surface-1: #fcfcfb; --page-plane: #f9f9f7; --text-primary: #0b0b0b;
@@ -49,7 +49,7 @@
     padding: 12px 16px; font-size: 12.5px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 20px;
   }
   .status-banner b { color: var(--text-primary); }
-  .progress-track { background: var(--gridline); border-radius: 999px; height: 6px; margin: 8px 0 4px; overflow: hidden; }
+  .progress-track { background: var(--gridline); border-radius: 999px; height: 6px; margin: 6px 0 10px; overflow: hidden; }
   .progress-fill { background: var(--warn); height: 100%; border-radius: 999px; }
 
   .summary-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0; }
@@ -58,6 +58,7 @@
   .stat-tile .value { font-size: 22px; font-weight: 600; }
   .stat-tile .sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px 14px; }
   .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .bar-label { width: 170px; font-size: 12.5px; color: var(--text-primary); text-align: right; flex-shrink: 0;
@@ -78,8 +79,15 @@
   .examples-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .example-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
   .example-card .name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
-  .example-card .org { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 12px; }
-  .work-item { padding: 8px 0; border-bottom: 1px solid var(--gridline); font-size: 12px; }
+  .example-card .org { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 10px; }
+  .metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+  .metric-box { background: var(--page-plane); border-radius: 8px; padding: 8px 10px; text-align: center; }
+  .metric-box .mv { font-size: 15px; font-weight: 600; }
+  .metric-box .mk { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .topics-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .topic-tag { font-size: 11px; padding: 3px 9px; border-radius: 999px; background: rgba(42,120,214,0.1);
+    color: var(--s1); font-weight: 500; }
+  .work-item { padding: 7px 0; border-bottom: 1px solid var(--gridline); font-size: 12px; }
   .work-item:last-child { border-bottom: none; }
   .work-item .wy { color: var(--s1); font-weight: 600; margin-right: 6px; }
   .work-item .wj { color: var(--text-muted); font-size: 11px; display: block; margin-top: 2px; }
@@ -87,18 +95,34 @@
   .footer-note { font-size: 11.5px; color: var(--text-muted); margin-top: 24px; line-height: 1.7; }
 
   @media (max-width: 640px) {
-    .summary-row, .examples-grid { grid-template-columns: 1fr; }
+    .summary-row, .examples-grid, .two-col { grid-template-columns: 1fr; }
     .bar-label { width: 100px; }
   }
 </style>
 
 <div class="viz-root">
-  <h1>作者深度画像：职称 / 合作网络 / 近5年发文</h1>
-  <p class="subtitle">覆盖范围：76,455位通讯作者中的最高价值人群（发过Top期刊/1区论文 且 通讯发文≥3篇），共 5932 人</p>
+  <h1>作者深度画像：机构 / 研究方向 / 职称 / 合作网络 / 近3年发文</h1>
+  <p class="subtitle">覆盖全部 76455 位通讯作者（不再限于高价值子集）</p>
 
   <div class="status-banner" id="statusBanner"></div>
 
   <div class="summary-row" id="summaryRow"></div>
+
+  <div class="two-col">
+    <div>
+      <div class="section-title">通讯作者所属机构 Top12</div>
+      <p class="section-desc">来自 OpenAlex 最新已知机构</p>
+      <div class="card"><div id="instChart"></div></div>
+    </div>
+    <div>
+      <div class="section-title">通讯作者所属国家 Top12</div>
+      <div class="card"><div id="countryChart"></div></div>
+    </div>
+  </div>
+
+  <div class="section-title">研究方向 Top15</div>
+  <p class="section-desc">按作者数排序（每位作者按 OpenAlex Topic 归类，取其前5大方向参与统计）</p>
+  <div class="card"><div id="topicChart"></div></div>
 
   <div class="section-title">现任职称分布</div>
   <p class="section-desc">数据来自 ORCID 公开 employments 记录，研究者自主维护，未必100%填写</p>
@@ -113,32 +137,37 @@
     </table>
   </div>
 
-  <div class="section-title">近5年发文示例</div>
-  <p class="section-desc">已完成抓取的作者中，选取发文记录最丰富的2位展示时间线</p>
+  <div class="section-title">完整画像示例</div>
+  <p class="section-desc">机构/方向/职称/近3年发文数据最完整的2位作者</p>
   <div class="examples-grid" id="examplesGrid"></div>
 
   <p class="footer-note">
-    方法说明：职称数据来自 ORCID <code>/employments</code> 接口；近5年发文来自 OpenAlex <code>/works?filter=author.id:...,publication_year:2022-2026</code>；
-    合作网络完全来自本库 <code>pubmed_authors</code> 表的自关联查询，无需外部请求。
-    近5年发文因 OpenAlex 搜索接口每日限额，采用每日自动补齐，数据逐日增长。
+    方法说明：机构与研究方向来自 OpenAlex <code>/authors/{id}</code>（不受配额限制的单条查询）；
+    职称来自 ORCID <code>/employments</code>；合作网络来自本库 <code>pubmed_authors</code> 自关联查询；
+    <b>近3年发文改为直接取本库 pubmed_articles 中该作者2024年以后的文献</b>——本库本身就是菌群/微生物组主题文献集，
+    天然满足"菌群相关"这个限定条件，且完全免费、无需调用 OpenAlex 付费搜索接口。局限是只反映作者在本库收录范围内的产出，
+    不代表其在其他领域期刊的全部近期发文。
   </p>
 </div>
 
 <script>
-  const DATA = {"target_total": 5932, "works_done": 988, "empl_done": 1947, "empl_with_title": 1419, "titles": [{"role_title": "Professor", "n": 348}, {"role_title": "Associate Professor", "n": 138}, {"role_title": "Assistant Professor", "n": 100}, {"role_title": "Director", "n": 49}, {"role_title": "Full Professor", "n": 19}, {"role_title": "Assistant professor", "n": 14}, {"role_title": "Group Leader", "n": 14}, {"role_title": "Principal Investigator", "n": 13}, {"role_title": "professor", "n": 13}, {"role_title": "Researcher", "n": 12}, {"role_title": "Associate professor", "n": 12}, {"role_title": "Adjunct Professor", "n": 11}], "collabs": [{"author1_name": "Ju‐Sheng Zheng", "author2_name": "Yu‐ming Chen", "co_corresponding_papers": 19}, {"author1_name": "Abdelhakim Bouyahya", "author2_name": "Learn‐Han Lee", "co_corresponding_papers": 17}, {"author1_name": "Zhenghong Yuan", "author2_name": "Lu Lu", "co_corresponding_papers": 15}, {"author1_name": "Laurence Zitvogel", "author2_name": "Guido Kroemer", "co_corresponding_papers": 15}, {"author1_name": "Julio Villena", "author2_name": "Haruki Kitazawa", "co_corresponding_papers": 15}, {"author1_name": "Lixin Zhu", "author2_name": "Ruixin Zhu", "co_corresponding_papers": 12}, {"author1_name": "Hua-Bin Li", "author2_name": "Ren-You Gan", "co_corresponding_papers": 11}, {"author1_name": "Oliver Kepp", "author2_name": "Guido Kroemer", "co_corresponding_papers": 11}, {"author1_name": "Jingfu Qiu", "author2_name": "Chengzhi Chen", "co_corresponding_papers": 9}, {"author1_name": "Jordi Mayneris-Perxachs", "author2_name": "José-Manuel Fernández-Real", "co_corresponding_papers": 9}, {"author1_name": "Nurul-Syakima Ab Mutalib", "author2_name": "Learn-Han Lee", "co_corresponding_papers": 9}, {"author1_name": "Youchun Wang", "author2_name": "Weijin Huang", "co_corresponding_papers": 9}, {"author1_name": "Bernard La Scola", "author2_name": "Philippe Colson", "co_corresponding_papers": 9}, {"author1_name": "Leilei Yu", "author2_name": "Fengwei Tian", "co_corresponding_papers": 9}, {"author1_name": "Guilian Yang", "author2_name": "Chunfeng Wang", "co_corresponding_papers": 8}], "collab_total": 116125, "multi_corr_papers": 51673, "examples": [{"name": "Francesca Giampieri", "role": null, "org": "Marche Polytechnic University", "works": [{"work_title": "Enhancing human gut health: Global innovations in dysbiosis management", "publication_year": 2025, "journal_name": "iMeta"}, {"work_title": "Unhealthy Ultra-Processed Food Consumption in Children and Adolescents Living in the Mediterranean Area: The DELICIOUS Project", "publication_year": 2025, "journal_name": "International Journal of Public Health"}, {"work_title": "The Role of Oxidative Stress in Periodontitis", "publication_year": 2025, "journal_name": "Journal of Periodontal Research"}, {"work_title": "Diet, Eating Habits, and Lifestyle Factors Associated with Adequate Sleep Duration in Children and Adolescents Living in 5 Mediterranean Countries: The DELICIOUS Project", "publication_year": 2025, "journal_name": "Nutrients"}, {"work_title": "Natural Products in Alzheimer’s Disease: A Systematic Review of Clinical Trials and Underlying Molecular Mechanisms", "publication_year": 2025, "journal_name": "International Journal of Molecular Sciences"}, {"work_title": "Resveratrol and vascular health: evidence from clinical studies and mechanisms of actions related to its metabolites produced by gut microbiota", "publication_year": 2024, "journal_name": "Frontiers in Pharmacology"}], "total_recent": 6}, {"name": "Jason Papin", "role": "Professor", "org": "University of Virginia", "works": [{"work_title": "Enzyme-enhanced RNA isolation from biofilm-producing bacteria", "publication_year": 2026, "journal_name": "Microbiology Spectrum"}, {"work_title": "Reframing the role of the objective function in its proper context for metabolic network modeling", "publication_year": 2025, "journal_name": "Cell Systems"}, {"work_title": "Ten simple rules for good model-sharing practices", "publication_year": 2025, "journal_name": "PLoS Computational Biology"}, {"work_title": "Genome-scale metabolic network reconstruction analysis identifies bacterial vaginosis-associated metabolic interactions", "publication_year": 2025, "journal_name": "Nature Communications"}, {"work_title": "Improvement in the prediction power of an astrocyte genome-scale metabolic model using multi-omic data", "publication_year": 2025, "journal_name": "Frontiers in Systems Biology"}, {"work_title": "Modeling spatiotemporal expansion of Pseudomonas aeruginosa communities within mucin gel mimetic environments", "publication_year": 2025, "journal_name": null}], "total_recent": 6}]};
+  const DATA = {"total_corresponding": 76455, "total_with_orcid": 64270, "inst_done": 3400, "top_institutions": [{"institution_name": "Sun Yat-sen University", "n": 31}, {"institution_name": "Jiangnan University", "n": 21}, {"institution_name": "Central South University", "n": 20}, {"institution_name": "Tongji University", "n": 15}, {"institution_name": "Guangzhou University of Chinese Medicine", "n": 14}, {"institution_name": "University of Copenhagen", "n": 14}, {"institution_name": "Shanghai Jiao Tong University", "n": 13}, {"institution_name": "Ningbo University", "n": 13}, {"institution_name": "Hebei Medical University", "n": 13}, {"institution_name": "Qingdao University", "n": 12}, {"institution_name": "Chinese Academy of Medical Sciences & Peking Union Medical College", "n": 12}, {"institution_name": "Inserm", "n": 12}], "top_countries": [{"institution_country": "CN", "n": 999}, {"institution_country": "US", "n": 560}, {"institution_country": "IT", "n": 127}, {"institution_country": "GB", "n": 118}, {"institution_country": "IN", "n": 105}, {"institution_country": "ES", "n": 98}, {"institution_country": "DE", "n": 87}, {"institution_country": "JP", "n": 78}, {"institution_country": "AU", "n": 75}, {"institution_country": "FR", "n": 75}, {"institution_country": "CA", "n": 63}, {"institution_country": "KR", "n": 58}], "top_topics": [{"topic_name": "Gut microbiota and health", "n": 752}, {"topic_name": "Probiotics and Fermented Foods", "n": 216}, {"topic_name": "Diet and metabolism studies", "n": 174}, {"topic_name": "Antibiotic Resistance in Bacteria", "n": 162}, {"topic_name": "Liver Disease Diagnosis and Treatment", "n": 157}, {"topic_name": "Genomics and Phylogenetic Studies", "n": 133}, {"topic_name": "Clostridium difficile and Clostridium perfringens research", "n": 133}, {"topic_name": "Immune Cell Function and Interaction", "n": 130}, {"topic_name": "Oral microbiology and periodontitis research", "n": 119}, {"topic_name": "Inflammatory Bowel Disease", "n": 111}, {"topic_name": "SARS-CoV-2 and COVID-19 Research", "n": 107}, {"topic_name": "MicroRNA in disease regulation", "n": 105}, {"topic_name": "COVID-19 Clinical Research Studies", "n": 102}, {"topic_name": "Gastrointestinal motility and disorders", "n": 99}, {"topic_name": "Phytochemicals and Antioxidant Activities", "n": 97}], "empl_done": 5726, "empl_with_title": 4110, "titles": [{"role_title": "Professor", "n": 915}, {"role_title": "Associate Professor", "n": 421}, {"role_title": "Assistant Professor", "n": 271}, {"role_title": "Director", "n": 112}, {"role_title": "Full Professor", "n": 60}, {"role_title": "Researcher", "n": 54}, {"role_title": "Associate professor", "n": 43}, {"role_title": "Principal Investigator", "n": 36}, {"role_title": "Adjunct Professor", "n": 31}, {"role_title": "Prof.", "n": 30}, {"role_title": "professor", "n": 29}, {"role_title": "Group Leader", "n": 28}], "works_done": 36706, "works_rows_total": 46206, "collabs": [{"author1_name": "Ju‐Sheng Zheng", "author2_name": "Yu‐ming Chen", "co_corresponding_papers": 19}, {"author1_name": "Abdelhakim Bouyahya", "author2_name": "Learn‐Han Lee", "co_corresponding_papers": 17}, {"author1_name": "Julio Villena", "author2_name": "Haruki Kitazawa", "co_corresponding_papers": 15}, {"author1_name": "Laurence Zitvogel", "author2_name": "Guido Kroemer", "co_corresponding_papers": 15}, {"author1_name": "Zhenghong Yuan", "author2_name": "Lu Lu", "co_corresponding_papers": 15}, {"author1_name": "Lixin Zhu", "author2_name": "Ruixin Zhu", "co_corresponding_papers": 12}, {"author1_name": "Oliver Kepp", "author2_name": "Guido Kroemer", "co_corresponding_papers": 11}, {"author1_name": "Hua-Bin Li", "author2_name": "Ren-You Gan", "co_corresponding_papers": 11}, {"author1_name": "Jingfu Qiu", "author2_name": "Chengzhi Chen", "co_corresponding_papers": 9}, {"author1_name": "Bernard La Scola", "author2_name": "Philippe Colson", "co_corresponding_papers": 9}, {"author1_name": "Nurul-Syakima Ab Mutalib", "author2_name": "Learn-Han Lee", "co_corresponding_papers": 9}, {"author1_name": "Youchun Wang", "author2_name": "Weijin Huang", "co_corresponding_papers": 9}, {"author1_name": "Leilei Yu", "author2_name": "Fengwei Tian", "co_corresponding_papers": 9}, {"author1_name": "Jordi Mayneris-Perxachs", "author2_name": "José-Manuel Fernández-Real", "co_corresponding_papers": 9}, {"author1_name": "Eleni Gentekaki", "author2_name": "Anastasios D. Tsaousis", "co_corresponding_papers": 8}], "collab_total": 116125, "multi_corr_papers": 51673, "examples": [{"name": "Jianguo Xu", "role": null, "org": "Jiaxing University", "h_index": 55, "works_count": 387, "cited_by_count": 13502, "topics": ["Advanced biosensing and bioanalysis techniques", "Biosensors and Analytical Detection", "RNA Interference and Gene Delivery", "DNA and Nucleic Acid Chemistry"], "recent_works": [{"work_title": "Surge in Chlamydia pneumoniae infections in China: insights from 2022 to 2024.", "publication_year": 2025, "journal_name": "Emerging microbes & infections"}, {"work_title": "Antiviral Activity of Marine Bacterium Paraliobacillus zengyii Against Enterovirus 71 In Vitro and In Vivo.", "publication_year": 2025, "journal_name": "International journal of molecular sciences"}, {"work_title": "Characterizing the epidemiology of Mycoplasma pneumoniae infections in China in 2022-2024: a nationwide cross-sectional study of over 1.6 million cases.", "publication_year": 2025, "journal_name": "Emerging microbes & infections"}, {"work_title": "A species-level identification pipeline for human gut microbiota based on the V3-V4 regions of 16S rRNA.", "publication_year": 2025, "journal_name": "Frontiers in microbiology"}, {"work_title": "Origin of Neisseria meningitidis clonal complex 4821.", "publication_year": 2025, "journal_name": "Emerging microbes & infections"}]}, {"name": "Qiansheng Huang", "role": null, "org": "????????????", "h_index": 34, "works_count": 114, "cited_by_count": 3499, "topics": ["Effects and risks of endocrine disrupting chemicals", "Toxic Organic Pollutants Impact", "Pharmaceutical and Antibiotic Environmental Impacts", "Microplastics and Plastic Pollution"], "recent_works": [{"work_title": "Decoding extracellular vesicles-mediated encapsulation of enveloped and nonenveloped gut viruses through phosphatidylserine affinity profiling.", "publication_year": 2026, "journal_name": "Virology"}, {"work_title": "Composition, Antibiotic Resistance, and Functionality of the Gut Microbiome in Urban Cats.", "publication_year": 2025, "journal_name": "Environmental science & technology"}, {"work_title": "Disruption and adaptation: infant gut microbiota's dynamic response to SARS-CoV-2 infection.", "publication_year": 2025, "journal_name": "Microbiome"}, {"work_title": "Polystyrene microplastic exposure induces selective accumulation of antibiotic resistance genes in gut microbiota and its potential health risks.", "publication_year": 2025, "journal_name": "International journal of biological macromolecules"}, {"work_title": "Altered metabolome and microbiome associated with compromised intestinal barrier induced hepatic lipid metabolic disorder in mice after subacute and subchronic ozone exposure.", "publication_year": 2024, "journal_name": "Environment international"}]}]};
 
-  const pct = Math.round(100 * DATA.works_done / DATA.target_total);
+  const instPct = Math.round(100 * DATA.inst_done / DATA.total_corresponding);
+  const emplPct = Math.round(100 * DATA.empl_done / DATA.total_with_orcid);
   document.getElementById("statusBanner").innerHTML = `
-    <b>数据持续更新中</b>（最后生成于 2026-07-15 23:21）：近5年发文已覆盖 ${DATA.works_done.toLocaleString()} / ${DATA.target_total.toLocaleString()} 人（${pct}%），
-    受 OpenAlex 每日免费额度限制，剩余部分通过系统定时任务每天自动补充一批，预计还需数天补齐。
-    职称查询已覆盖 ${DATA.empl_done.toLocaleString()} / ${DATA.target_total.toLocaleString()} 人，仍在后台运行中。
-    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>`;
+    <b>全量抓取进行中</b>（最后生成于 2026-07-16 02:36）
+    <div>机构+研究方向：${DATA.inst_done.toLocaleString()} / ${DATA.total_corresponding.toLocaleString()} 人（${instPct}%）</div>
+    <div class="progress-track"><div class="progress-fill" style="width:${instPct}%"></div></div>
+    <div>现任职称：${DATA.empl_done.toLocaleString()} / ${DATA.total_with_orcid.toLocaleString()} 人（有ORCID的）（${emplPct}%）</div>
+    <div class="progress-track"><div class="progress-fill" style="width:${emplPct}%"></div></div>
+    <div>近3年库内发文：${DATA.works_done.toLocaleString()} 人已有记录（免费方法，已一次性跑完，非配额限制）</div>`;
 
   const summary = [
     { label: "合作网络边数", value: DATA.collab_total.toLocaleString() },
     { label: "多通讯作者论文", value: DATA.multi_corr_papers.toLocaleString() },
-    { label: "职称已覆盖人数", value: DATA.empl_done.toLocaleString(), sub: `其中${DATA.empl_with_title.toLocaleString()}人填写了职称` },
-    { label: "近5年发文已覆盖", value: DATA.works_done.toLocaleString(), sub: `目标 ${DATA.target_total.toLocaleString()} 人` },
+    { label: "职称已覆盖", value: DATA.empl_done.toLocaleString(), sub: `其中${DATA.empl_with_title.toLocaleString()}人填写了职称` },
+    { label: "近3年发文覆盖", value: DATA.works_done.toLocaleString(), sub: `共${DATA.works_rows_total.toLocaleString()}篇` },
   ];
   const summaryRow = document.getElementById("summaryRow");
   summary.forEach(s => {
@@ -148,18 +177,25 @@
     summaryRow.appendChild(tile);
   });
 
-  const titleChart = document.getElementById("titleChart");
-  const maxTitle = Math.max(...DATA.titles.map(t => t.n));
-  DATA.titles.forEach(t => {
-    const row = document.createElement("div");
-    row.className = "bar-row";
-    const pctW = (t.n / maxTitle) * 100;
-    row.innerHTML = `
-      <div class="bar-label">${t.role_title}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${pctW}%"></div></div>
-      <div class="bar-value">${t.n}</div>`;
-    titleChart.appendChild(row);
-  });
+  function renderBars(containerId, items, labelKey, valueKey) {
+    const container = document.getElementById(containerId);
+    if (!items.length) { container.innerHTML = '<p style="font-size:12px;color:var(--text-muted)">暂无数据</p>'; return; }
+    const max = Math.max(...items.map(i => i[valueKey]));
+    items.forEach(item => {
+      const row = document.createElement("div");
+      row.className = "bar-row";
+      const pctW = (item[valueKey] / max) * 100;
+      row.innerHTML = `
+        <div class="bar-label">${item[labelKey]}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pctW}%"></div></div>
+        <div class="bar-value">${item[valueKey]}</div>`;
+      container.appendChild(row);
+    });
+  }
+  renderBars("instChart", DATA.top_institutions, "institution_name", "n");
+  renderBars("countryChart", DATA.top_countries, "institution_country", "n");
+  renderBars("topicChart", DATA.top_topics, "topic_name", "n");
+  renderBars("titleChart", DATA.titles, "role_title", "n");
 
   const collabBody = document.getElementById("collabBody");
   DATA.collabs.forEach(c => {
@@ -172,14 +208,21 @@
   DATA.examples.forEach(ex => {
     const card = document.createElement("div");
     card.className = "example-card";
-    const worksHtml = ex.works.map(w => `
+    const worksHtml = ex.recent_works.map(w => `
       <div class="work-item">
         <span class="wy">${w.publication_year || "—"}</span>${w.work_title || "(无标题)"}
         <span class="wj">${w.journal_name || ""}</span>
       </div>`).join("");
+    const topicsHtml = (ex.topics || []).map(t => `<span class="topic-tag">${t}</span>`).join("");
     card.innerHTML = `
       <div class="name">${ex.name}</div>
       <div class="org">${ex.role ? ex.role + " · " : ""}${ex.org || ""}</div>
+      <div class="metrics-row">
+        <div class="metric-box"><div class="mv">${ex.works_count ?? "—"}</div><div class="mk">发文量</div></div>
+        <div class="metric-box"><div class="mv">${(ex.cited_by_count ?? 0).toLocaleString()}</div><div class="mk">被引</div></div>
+        <div class="metric-box"><div class="mv">${ex.h_index ?? "—"}</div><div class="mk">h-index</div></div>
+      </div>
+      <div class="topics-wrap">${topicsHtml}</div>
       ${worksHtml}`;
     grid.appendChild(card);
   });
