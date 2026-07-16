@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>通讯作者 / ORCID / 机构分布报告</title>
+</head>
+<body>
+<title>通讯作者 / ORCID / 机构分布报告</title>
+<style>
+  .viz-root {
+    --surface-1: #fcfcfb; --page-plane: #f9f9f7; --text-primary: #0b0b0b;
+    --text-secondary: #52514e; --text-muted: #898781; --gridline: #e1e0d9;
+    --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --s1: #2a78d6; --s2: #1baf7a;
+  }
+  @media (prefers-color-scheme: dark) {
+    .viz-root {
+      --surface-1: #1a1a19; --page-plane: #0d0d0d; --text-primary: #ffffff;
+      --text-secondary: #c3c2b7; --text-muted: #898781; --gridline: #2c2c2a;
+      --baseline: #383835; --border: rgba(255,255,255,0.10);
+      --s1: #3987e5; --s2: #199e70;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    --surface-1: #1a1a19; --page-plane: #0d0d0d; --text-primary: #ffffff;
+    --text-secondary: #c3c2b7; --text-muted: #898781; --gridline: #2c2c2a;
+    --baseline: #383835; --border: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #199e70;
+  }
+  :root[data-theme="light"] .viz-root {
+    --surface-1: #fcfcfb; --page-plane: #f9f9f7; --text-primary: #0b0b0b;
+    --text-secondary: #52514e; --text-muted: #898781; --gridline: #e1e0d9;
+    --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --s1: #2a78d6; --s2: #1baf7a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page-plane); color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .viz-root { max-width: 980px; margin: 0 auto; padding: 28px 20px 60px; }
+  h1 { font-size: 19px; font-weight: 600; margin: 0 0 4px; }
+  .subtitle { font-size: 13px; color: var(--text-secondary); margin: 0 0 20px; }
+  h2sec { display:none; }
+  .section-title { font-size: 15px; font-weight: 600; margin: 32px 0 4px; }
+  .section-desc { font-size: 12.5px; color: var(--text-muted); margin: 0 0 14px; }
+
+  .method-box {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px; font-size: 12.5px; line-height: 1.8; color: var(--text-secondary);
+  }
+  .method-box b { color: var(--text-primary); font-weight: 700; }
+  .method-box ul { margin: 8px 0 0; padding-left: 18px; }
+  .method-box li { margin-bottom: 4px; }
+  code { background: var(--gridline); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; }
+
+  .summary-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0; }
+  .stat-tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .stat-tile .label { font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; }
+  .stat-tile .value { font-size: 22px; font-weight: 600; }
+  .stat-tile .sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px 14px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar-label { width: 150px; font-size: 12.5px; color: var(--text-primary); text-align: right; flex-shrink: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { flex: 1; position: relative; height: 20px; }
+  .bar-fill { position: absolute; left: 0; top: 0; height: 20px; border-radius: 4px; background: var(--s1); }
+  .bar-value { font-size: 11.5px; color: var(--text-secondary); margin-left: 8px; font-variant-numeric: tabular-nums;
+    white-space: nowrap; }
+  .inst-label { width: 260px; }
+
+  .examples-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .example-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  .example-card .name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+  .example-card .org { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 12px; }
+  .example-card .row { display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0;
+    border-bottom: 1px solid var(--gridline); }
+  .example-card .row:last-of-type { border-bottom: none; }
+  .example-card .row .k { color: var(--text-muted); }
+  .example-card .row .v { font-weight: 500; text-align: right; }
+  .orcid-link {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 12.5px;
+    color: var(--s2); text-decoration: none; font-weight: 600;
+  }
+  .orcid-badge {
+    display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--s2); color: #fff; font-size: 10px; font-weight: 700;
+  }
+  .db-evidence {
+    margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border);
+    font-size: 11.5px; color: var(--text-muted); line-height: 1.6;
+  }
+
+  @media (max-width: 640px) {
+    .summary-row, .examples-grid { grid-template-columns: 1fr; }
+    .bar-label { width: 90px; }
+    .inst-label { width: 120px; }
+  }
+</style>
+
+<div class="viz-root">
+  <h1>通讯作者 / ORCID / 机构国家分布</h1>
+  <p class="subtitle">rpa_db.pubmed_authors · 全量 113,150 篇文献抓取完成，数据来自 OpenAlex API</p>
+
+  <div class="section-title">通讯作者是怎么挑出来的</div>
+  <div class="method-box">
+    每篇文献的作者列表来自 OpenAlex 按 PMID 查询到的 <code>authorships</code>，其中每个作者对象自带
+    <code>is_corresponding</code> 布尔字段——这个标记<b>不是算法猜的</b>，而是直接来自期刊投稿系统提交给
+    PubMed/Crossref 的结构化元数据（作者投稿时勾选的"通讯作者"身份）。抓取逻辑：
+    <ul>
+      <li>对每个 PMID 调用一次 OpenAlex，取回完整作者列表</li>
+      <li>逐个作者写入 <code>pubmed_authors</code> 表，其中 <code>is_corresponding=true</code> 的即为该文献标记的通讯作者</li>
+      <li>一篇文献可能有 0 个（未标注）、1 个或多个通讯作者（多机构合作常见多通讯作者）</li>
+      <li>覆盖率 82.4% 是元数据本身的局限——尤其是较早年份、或期刊投稿系统未结构化提交该字段的文献，即使正文里写明通讯作者，OpenAlex 也无法识别（此前已核实过这一点）</li>
+    </ul>
+  </div>
+
+  <div class="summary-row" id="summaryRow"></div>
+
+  <div class="section-title">通讯作者所属国家 Top 15</div>
+  <p class="section-desc">按论文数排序（一篇论文可能有多个不同国家的通讯作者，故分开计数）</p>
+  <div class="card"><div id="countryChart"></div></div>
+
+  <div class="section-title">通讯作者所属机构 Top 15</div>
+  <p class="section-desc">跨国合作机构（如 Inserm、CNRS）常年占据前列，符合微生物组研究的国际合作特征</p>
+  <div class="card"><div id="instChart"></div></div>
+
+  <div class="section-title">真实 ORCID 主页示例</div>
+  <p class="section-desc">随机抽取 2 位库内识别出的通讯作者，直接调用 ORCID 公开 API 验证身份真实存在，可点击跳转查看本人主页</p>
+  <div class="examples-grid" id="examplesGrid"></div>
+</div>
+
+<script>
+  const DATA = {"countries": [{"code": "CN", "name": "中国", "n": 22571}, {"code": "US", "name": "美国", "n": 21638}, {"code": "IT", "name": "意大利", "n": 4550}, {"code": "GB", "name": "英国", "n": 4419}, {"code": "DE", "name": "德国", "n": 3222}, {"code": "FR", "name": "法国", "n": 3131}, {"code": "IN", "name": "印度", "n": 3068}, {"code": "ES", "name": "西班牙", "n": 2786}, {"code": "CA", "name": "加拿大", "n": 2753}, {"code": "AU", "name": "澳大利亚", "n": 2602}, {"code": "JP", "name": "日本", "n": 2508}, {"code": "KR", "name": "韩国", "n": 2032}, {"code": "NL", "name": "荷兰", "n": 1920}, {"code": "BR", "name": "巴西", "n": 1709}, {"code": "IR", "name": "伊朗", "n": 1522}], "institutions": [{"name": "Inserm", "n": 1257}, {"name": "Harvard University", "n": 1004}, {"name": "Chinese Academy of Medical Sciences & Peking Union Medical College", "n": 830}, {"name": "Chinese Academy of Sciences", "n": 776}, {"name": "Sun Yat-sen University", "n": 708}, {"name": "Shanghai Jiao Tong University", "n": 692}, {"name": "Centre National de la Recherche Scientifique", "n": 666}, {"name": "Zhejiang University", "n": 608}, {"name": "University College Cork", "n": 583}, {"name": "Sichuan University", "n": 556}, {"name": "Southern Medical University", "n": 544}, {"name": "Fudan University", "n": 542}, {"name": "King's College London", "n": 534}, {"name": "APC Microbiome Institute", "n": 530}, {"name": "Peking University", "n": 521}]};
+  const EXAMPLES = [{"name": "Abigail Sloan Devlin", "orcid": "0000-0001-5598-3751", "role": "Associate Professor", "org": "Harvard Medical School", "country": "美国", "works": 10, "lab_url": "https://devlin.hms.harvard.edu/", "sample_pmid": "41811452", "sample_name_in_db": "A. Sloan Devlin"}, {"name": "亚韡 王 (Yawei Wang)", "orcid": "0000-0002-6115-4076", "role": null, "org": "Research Center for Eco-Environmental Sciences, Chinese Academy of Sciences", "country": "中国", "works": 0, "lab_url": null, "sample_pmid": "41949255", "sample_name_in_db": "Yawei Wang"}];
+
+  const summary = [
+    { label: "总论文数", value: "112,834" },
+    { label: "识别出通讯作者", value: "93,019", sub: "82.4%" },
+    { label: "通讯作者含ORCID", value: "85,936", sub: "占有通讯作者论文的92.4%" },
+    { label: "去重通讯作者人数", value: "76,454" },
+  ];
+  const summaryRow = document.getElementById("summaryRow");
+  summary.forEach(s => {
+    const tile = document.createElement("div");
+    tile.className = "stat-tile";
+    tile.innerHTML = `<div class="label">${s.label}</div><div class="value">${s.value}</div>${s.sub ? `<div class="sub">${s.sub}</div>` : ""}`;
+    summaryRow.appendChild(tile);
+  });
+
+  function renderBars(containerId, items, labelKey, labelWidthClass) {
+    const container = document.getElementById(containerId);
+    const max = Math.max(...items.map(i => i.n));
+    items.forEach(item => {
+      const row = document.createElement("div");
+      row.className = "bar-row";
+      const pct = (item.n / max) * 100;
+      row.innerHTML = `
+        <div class="bar-label ${labelWidthClass || ''}">${item[labelKey]}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+        <div class="bar-value">${item.n.toLocaleString()}</div>`;
+      container.appendChild(row);
+    });
+  }
+  renderBars("countryChart", DATA.countries, "name");
+  renderBars("instChart", DATA.institutions, "name", "inst-label");
+
+  const grid = document.getElementById("examplesGrid");
+  EXAMPLES.forEach(ex => {
+    const card = document.createElement("div");
+    card.className = "example-card";
+    card.innerHTML = `
+      <div class="name">${ex.name}</div>
+      <div class="org">${ex.role ? ex.role + " · " : ""}${ex.org}</div>
+      <div class="row"><span class="k">国家</span><span class="v">${ex.country}</span></div>
+      <div class="row"><span class="k">ORCID 号</span><span class="v">${ex.orcid}</span></div>
+      <div class="row"><span class="k">ORCID 上公开著作数</span><span class="v">${ex.works}</span></div>
+      ${ex.lab_url ? `<div class="row"><span class="k">实验室主页</span><span class="v"><a href="${ex.lab_url}" target="_blank" rel="noopener" style="color:var(--s1)">链接</a></span></div>` : ""}
+      <a class="orcid-link" href="https://orcid.org/${ex.orcid}" target="_blank" rel="noopener">
+        <span class="orcid-badge">iD</span> 查看 ORCID 公开主页 →
+      </a>
+      <div class="db-evidence">
+        库内证据：PMID <a href="https://pubmed.ncbi.nlm.nih.gov/${ex.sample_pmid}/" target="_blank" rel="noopener" style="color:inherit">${ex.sample_pmid}</a>
+        中被标记为通讯作者，抓取到的姓名为「${ex.sample_name_in_db}」
+      </div>`;
+    grid.appendChild(card);
+  });
+</script>
+
+</body>
+</html>
