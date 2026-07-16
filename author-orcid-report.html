@@ -69,10 +69,21 @@
     white-space: nowrap; }
   .inst-label { width: 260px; }
 
-  .examples-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .examples-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
   .example-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
   .example-card .name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
-  .example-card .org { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 12px; }
+  .example-card .org { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 2px; }
+  .example-card .org-history { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5; }
+  .metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .metric-box { background: var(--page-plane); border-radius: 8px; padding: 8px 10px; text-align: center; }
+  .metric-box .mv { font-size: 16px; font-weight: 600; }
+  .metric-box .mk { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .topics-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+  .topics-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .topic-tag {
+    font-size: 11px; padding: 3px 9px; border-radius: 999px; background: rgba(42,120,214,0.1);
+    color: var(--s1); font-weight: 500;
+  }
   .example-card .row { display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0;
     border-bottom: 1px solid var(--gridline); }
   .example-card .row:last-of-type { border-bottom: none; }
@@ -90,6 +101,12 @@
     margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border);
     font-size: 11.5px; color: var(--text-muted); line-height: 1.6;
   }
+  .caveat-box {
+    margin-top: 12px; padding: 10px 12px; border-radius: 8px;
+    background: rgba(237,161,0,0.1); border: 1px solid rgba(237,161,0,0.35);
+    font-size: 11.5px; line-height: 1.6; color: var(--text-secondary);
+  }
+  .caveat-box b { color: var(--text-primary); }
 
   @media (max-width: 640px) {
     .summary-row, .examples-grid { grid-template-columns: 1fr; }
@@ -125,14 +142,18 @@
   <p class="section-desc">跨国合作机构（如 Inserm、CNRS）常年占据前列，符合微生物组研究的国际合作特征</p>
   <div class="card"><div id="instChart"></div></div>
 
-  <div class="section-title">真实 ORCID 主页示例</div>
-  <p class="section-desc">随机抽取 2 位库内识别出的通讯作者，直接调用 ORCID 公开 API 验证身份真实存在，可点击跳转查看本人主页</p>
+  <div class="section-title">作者完整画像示例</div>
+  <p class="section-desc">
+    ORCID 本身信息有限（仅机构+著作数），机构、研究方向、h-index 等更完整的画像改用 OpenAlex 的
+    <code>/authors/{openalex_author_id}</code> 接口获取——这个ID库里已经存好，不用重新匹配。
+    下方仍保留 ORCID 链接用于身份核验。
+  </p>
   <div class="examples-grid" id="examplesGrid"></div>
 </div>
 
 <script>
   const DATA = {"countries": [{"code": "CN", "name": "中国", "n": 22571}, {"code": "US", "name": "美国", "n": 21638}, {"code": "IT", "name": "意大利", "n": 4550}, {"code": "GB", "name": "英国", "n": 4419}, {"code": "DE", "name": "德国", "n": 3222}, {"code": "FR", "name": "法国", "n": 3131}, {"code": "IN", "name": "印度", "n": 3068}, {"code": "ES", "name": "西班牙", "n": 2786}, {"code": "CA", "name": "加拿大", "n": 2753}, {"code": "AU", "name": "澳大利亚", "n": 2602}, {"code": "JP", "name": "日本", "n": 2508}, {"code": "KR", "name": "韩国", "n": 2032}, {"code": "NL", "name": "荷兰", "n": 1920}, {"code": "BR", "name": "巴西", "n": 1709}, {"code": "IR", "name": "伊朗", "n": 1522}], "institutions": [{"name": "Inserm", "n": 1257}, {"name": "Harvard University", "n": 1004}, {"name": "Chinese Academy of Medical Sciences & Peking Union Medical College", "n": 830}, {"name": "Chinese Academy of Sciences", "n": 776}, {"name": "Sun Yat-sen University", "n": 708}, {"name": "Shanghai Jiao Tong University", "n": 692}, {"name": "Centre National de la Recherche Scientifique", "n": 666}, {"name": "Zhejiang University", "n": 608}, {"name": "University College Cork", "n": 583}, {"name": "Sichuan University", "n": 556}, {"name": "Southern Medical University", "n": 544}, {"name": "Fudan University", "n": 542}, {"name": "King's College London", "n": 534}, {"name": "APC Microbiome Institute", "n": 530}, {"name": "Peking University", "n": 521}]};
-  const EXAMPLES = [{"name": "Abigail Sloan Devlin", "orcid": "0000-0001-5598-3751", "role": "Associate Professor", "org": "Harvard Medical School", "country": "美国", "works": 10, "lab_url": "https://devlin.hms.harvard.edu/", "sample_pmid": "41811452", "sample_name_in_db": "A. Sloan Devlin"}, {"name": "亚韡 王 (Yawei Wang)", "orcid": "0000-0002-6115-4076", "role": null, "org": "Research Center for Eco-Environmental Sciences, Chinese Academy of Sciences", "country": "中国", "works": 0, "lab_url": null, "sample_pmid": "41949255", "sample_name_in_db": "Yawei Wang"}];
+  const EXAMPLES = [{"name": "Abigail Sloan Devlin", "orcid": "0000-0001-5598-3751", "openalex_id": "A5027906628", "org": "Harvard University", "org_history": "Stanford University → UCSF / QB3 → Boston VA Research Institute → Harvard University", "country": "美国", "works_count": 43, "cited_by_count": 14832, "h_index": 24, "topics": ["Drug Transport and Resistance Mechanisms", "Gut microbiota and health", "Pediatric Hepatobiliary Diseases", "Diet and metabolism studies"], "lab_url": "https://devlin.hms.harvard.edu/", "sample_pmid": "41811452", "sample_name_in_db": "A. Sloan Devlin", "caveat": null}, {"name": "王亚韡 (Yawei Wang)", "orcid": "0000-0002-6115-4076", "openalex_id": "A5100434932", "org": "中国科学院生态环境研究中心", "org_history": "中国矿业大学 → 江汉大学 → 中丹中心 → 中科院生态环境研究中心 → 中国科学院大学", "country": "中国", "works_count": 332, "cited_by_count": 13428, "h_index": 70, "topics": ["Toxic Organic Pollutants Impact", "Per- and polyfluoroalkyl substances (PFAS) research", "Atmospheric chemistry and aerosols", "Air Quality and Health Impacts"], "lab_url": null, "sample_pmid": "41949255", "sample_name_in_db": "Yawei Wang", "caveat": "研究方向以环境污染物毒理学为主，与库内论文主题（肠道菌群）关联度不高。「王亚韡/Yawei Wang」是常见中文姓名，332篇论文、h-index 70 的体量存在同名学者被 OpenAlex 错误合并的风险，此画像仅供参考，不代表100%准确。"}];
 
   const summary = [
     { label: "总论文数", value: "112,834" },
@@ -171,18 +192,26 @@
     card.className = "example-card";
     card.innerHTML = `
       <div class="name">${ex.name}</div>
-      <div class="org">${ex.role ? ex.role + " · " : ""}${ex.org}</div>
+      <div class="org">${ex.org}</div>
+      <div class="org-history">机构变迁：${ex.org_history}</div>
+      <div class="metrics-row">
+        <div class="metric-box"><div class="mv">${ex.works_count}</div><div class="mk">发文量</div></div>
+        <div class="metric-box"><div class="mv">${ex.cited_by_count.toLocaleString()}</div><div class="mk">被引次数</div></div>
+        <div class="metric-box"><div class="mv">${ex.h_index}</div><div class="mk">h-index</div></div>
+      </div>
+      <div class="topics-label">研究方向（按论文数排序）</div>
+      <div class="topics-wrap">${ex.topics.map(t => `<span class="topic-tag">${t}</span>`).join("")}</div>
       <div class="row"><span class="k">国家</span><span class="v">${ex.country}</span></div>
       <div class="row"><span class="k">ORCID 号</span><span class="v">${ex.orcid}</span></div>
-      <div class="row"><span class="k">ORCID 上公开著作数</span><span class="v">${ex.works}</span></div>
       ${ex.lab_url ? `<div class="row"><span class="k">实验室主页</span><span class="v"><a href="${ex.lab_url}" target="_blank" rel="noopener" style="color:var(--s1)">链接</a></span></div>` : ""}
       <a class="orcid-link" href="https://orcid.org/${ex.orcid}" target="_blank" rel="noopener">
         <span class="orcid-badge">iD</span> 查看 ORCID 公开主页 →
       </a>
       <div class="db-evidence">
         库内证据：PMID <a href="https://pubmed.ncbi.nlm.nih.gov/${ex.sample_pmid}/" target="_blank" rel="noopener" style="color:inherit">${ex.sample_pmid}</a>
-        中被标记为通讯作者，抓取到的姓名为「${ex.sample_name_in_db}」
-      </div>`;
+        中被标记为通讯作者，抓取到的姓名为「${ex.sample_name_in_db}」· OpenAlex ID: ${ex.openalex_id}
+      </div>
+      ${ex.caveat ? `<div class="caveat-box"><b>⚠ 消歧风险提示：</b>${ex.caveat}</div>` : ""}`;
     grid.appendChild(card);
   });
 </script>
