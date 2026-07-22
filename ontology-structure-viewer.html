@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>微生物文献知识库本体 · 结构浏览器</title>
+<style>
+:root {
+  --surface-1: #fcfcfb; --surface-2: #f9f9f7; --ink-primary: #0b0b0b; --ink-secondary: #52514e;
+  --ink-muted: #898781; --border: rgba(11,11,11,0.10); --border-strong: rgba(11,11,11,0.20);
+  --accent: #2a78d6; --accent-ink: #ffffff; --code-bg: rgba(11,11,11,0.05); --shadow: 0 1px 2px rgba(11,11,11,0.06);
+  --good: #0ca30c; --good-bg: rgba(12,163,12,0.1);
+  --c1: #2a78d6; --c2: #1baf7a; --c3: #eda100; --c4: #008300; --c5: #4a3aa7; --c6: #e34948; --c7: #e87ba4; --c8: #eb6834;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-1: #17150f; --surface-2: #1f1c15; --ink-primary: #f7f4ee; --ink-secondary: #c7c0b0;
+    --ink-muted: #948d7c; --border: rgba(255,255,255,0.12); --border-strong: rgba(255,255,255,0.22);
+    --accent: #3987e5; --accent-ink: #0b0b0b; --code-bg: rgba(255,255,255,0.07); --shadow: 0 1px 2px rgba(0,0,0,0.3);
+    --good: #0ca30c; --good-bg: rgba(12,163,12,0.16);
+    --c1: #3987e5; --c2: #199e70; --c3: #c98500; --c4: #1fa31f; --c5: #9085e9; --c6: #e66767; --c7: #d55181; --c8: #d95926;
+  }
+}
+:root[data-theme="dark"] {
+  --surface-1: #17150f; --surface-2: #1f1c15; --ink-primary: #f7f4ee; --ink-secondary: #c7c0b0;
+  --ink-muted: #948d7c; --border: rgba(255,255,255,0.12); --border-strong: rgba(255,255,255,0.22);
+  --accent: #3987e5; --accent-ink: #0b0b0b; --code-bg: rgba(255,255,255,0.07); --shadow: 0 1px 2px rgba(0,0,0,0.3);
+  --good: #0ca30c; --good-bg: rgba(12,163,12,0.16);
+  --c1: #3987e5; --c2: #199e70; --c3: #c98500; --c4: #1fa31f; --c5: #9085e9; --c6: #e66767; --c7: #d55181; --c8: #d95926;
+}
+:root[data-theme="light"] {
+  --surface-1: #fcfcfb; --surface-2: #f9f9f7; --ink-primary: #0b0b0b; --ink-secondary: #52514e;
+  --ink-muted: #898781; --border: rgba(11,11,11,0.10); --border-strong: rgba(11,11,11,0.20);
+  --accent: #2a78d6; --accent-ink: #ffffff; --code-bg: rgba(11,11,11,0.05); --shadow: 0 1px 2px rgba(11,11,11,0.06);
+  --good: #0ca30c; --good-bg: rgba(12,163,12,0.1);
+  --c1: #2a78d6; --c2: #1baf7a; --c3: #eda100; --c4: #008300; --c5: #4a3aa7; --c6: #e34948; --c7: #e87ba4; --c8: #eb6834;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { background: var(--surface-2); color: var(--ink-primary); font-family: -apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; line-height: 1.5; }
+::selection { background: var(--accent); color: var(--accent-ink); }
+.wrap { max-width: 1220px; margin: 0 auto; padding: 28px 20px 80px; }
+.masthead { display: flex; flex-direction: column; gap: 14px; padding-bottom: 20px; margin-bottom: 22px; border-bottom: 1px solid var(--border-strong); }
+.masthead-top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+h1 { font-family: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-weight: 600; font-size: 26px; letter-spacing: .2px; margin: 0; text-wrap: balance; }
+.subtitle { color: var(--ink-secondary); font-size: 14px; margin-top: 4px; max-width: 66ch; }
+.source-path { font-family: ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-size: 11.5px; color: var(--ink-muted); }
+.version-note { font-size: 11.5px; color: var(--good); background: var(--good-bg); display: inline-block; padding: 2px 9px; border-radius: 999px; margin-top: 6px; }
+.stats { display: flex; gap: 10px; flex-wrap: wrap; }
+.stat-tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; min-width: 88px; box-shadow: var(--shadow); }
+.stat-tile .num { font-family: ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 600; }
+.stat-tile .lbl { font-size: 10.5px; color: var(--ink-muted); margin-top: 2px; }
+.legend { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 999px; padding: 5px 11px 5px 8px; font-size: 12.5px; cursor: pointer; background: var(--surface-1); color: var(--ink-secondary); user-select: none; }
+.chip:hover { border-color: var(--border-strong); }
+.chip.off { opacity: .35; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+section.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin-bottom: 22px; box-shadow: var(--shadow); }
+h2 { font-family: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-size: 18px; font-weight: 600; margin: 0 0 4px; }
+.section-desc { color: var(--ink-secondary); font-size: 13px; margin: 0 0 14px; max-width: 78ch; }
+.net-wrap { position: relative; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface-2); }
+svg#netsvg { display: block; width: 100%; height: 640px; cursor: grab; }
+svg#netsvg:active { cursor: grabbing; }
+.net-node circle { stroke-width: 1.6; }
+.net-node text { font-size: 10.5px; fill: var(--ink-primary); pointer-events: none; font-weight: 600; }
+.net-node .en { font-size: 8px; fill: var(--ink-muted); font-weight: 400; }
+.net-node:hover circle { stroke-width: 3; }
+.net-edge { stroke: var(--ink-muted); stroke-width: 1.1; fill: none; opacity: .55; }
+.net-edge.bidir { stroke: var(--accent); opacity: .75; }
+.net-edge.subclass { stroke: var(--ink-muted); stroke-dasharray: 2 2; opacity: .8; }
+.net-edge.chain { stroke: var(--c3); stroke-width: 2; stroke-dasharray: 6 3; opacity: .95; }
+.net-toolbar { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; }
+.net-btn { font-size: 11px; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--surface-1); color: var(--ink-secondary); cursor: pointer; }
+.net-btn:hover { border-color: var(--accent); color: var(--accent); }
+.net-tooltip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border-strong); border-radius: 6px; padding: 5px 9px; font-size: 11px; color: var(--ink-primary); box-shadow: var(--shadow); display: none; max-width: 260px; z-index: 5; }
+.net-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 11.5px; color: var(--ink-muted); }
+.net-legend .swatch { display: inline-block; width: 16px; height: 0; border-top: 1.6px solid var(--ink-muted); vertical-align: middle; margin-right: 5px; }
+.net-legend .swatch.bidir { border-color: var(--accent); border-top-width: 2px; }
+.net-legend .swatch.subclass { border-style: dashed; }
+.net-legend .swatch.chain { border-color: var(--c3); border-style: dashed; border-top-width: 2px; }
+.search-row { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+input[type="search"] { flex: 1; min-width: 200px; padding: 8px 12px; border-radius: 7px; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--ink-primary); font-size: 13.5px; }
+input[type="search"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.hint { font-size: 11.5px; color: var(--ink-muted); }
+.defined-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.defined-card { border: 1px solid var(--border-strong); border-radius: 10px; padding: 14px 16px; background: var(--surface-2); }
+.defined-card h3 { margin: 0 0 3px; font-size: 14.5px; font-weight: 600; }
+.defined-card .en { font-size: 11.5px; color: var(--ink-muted); margin-bottom: 8px; }
+.defined-card .desc { font-size: 12.3px; color: var(--ink-secondary); }
+ul.tree, ul.tree ul { list-style: none; margin: 0; padding-left: 20px; }
+ul.tree { padding-left: 0; }
+.tree > li { margin-bottom: 4px; }
+.node-row { display: flex; align-items: baseline; gap: 7px; padding: 3px 6px; border-radius: 5px; cursor: pointer; font-size: 13.5px; flex-wrap: wrap; }
+.node-row:hover { background: var(--code-bg); }
+.node-row .twisty { width: 14px; flex: none; color: var(--ink-muted); font-size: 10px; transition: transform .12s ease; }
+.node-row.open > .twisty { transform: rotate(90deg); }
+.node-row .dot { margin-top: 1px; }
+.node-row .zh { font-weight: 500; }
+.node-row .en { color: var(--ink-muted); font-size: 12px; }
+.node-row .id-tag { font-family: ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size: 10.5px; color: var(--ink-muted); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+.demo-badge { font-size: 9.5px; color: var(--c8); border: 1px solid var(--c8); padding: 0 5px; border-radius: 999px; }
+.node-children { display: none; }
+.node-children.open { display: block; }
+.node-detail { display: none; margin: 2px 0 6px 21px; padding: 8px 12px; font-size: 12.5px; color: var(--ink-secondary); background: var(--code-bg); border-left: 2px solid var(--border-strong); border-radius: 0 6px 6px 0; max-width: 72ch; }
+.node-detail.open { display: block; }
+.node-detail .rel-line { margin-top: 4px; font-size: 11.5px; }
+.node-detail .rel-line b { color: var(--ink-primary); font-weight: 600; }
+.ind-item .node-row { font-size: 12.5px; opacity: .9; }
+.ind-item .node-row .dot { width: 6px; height: 6px; }
+.hidden-node { display: none !important; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 12.8px; }
+thead th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-muted); font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--border-strong); white-space: nowrap; }
+tbody td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tbody tr:hover { background: var(--code-bg); }
+.mono { font-family: ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size: 11.5px; }
+.arrow-sep { color: var(--ink-muted); margin: 0 4px; }
+.sup-badge { display: inline-block; font-size: 10px; color: var(--ink-muted); background: var(--code-bg); padding: 1px 6px; border-radius: 4px; margin-left: 6px; }
+.func-badge { display: inline-block; font-size: 9.5px; font-weight: 700; color: var(--accent-ink); background: var(--accent); padding: 0 5px; border-radius: 4px; margin-left: 6px; }
+.branch-tag { display: inline-flex; align-items: center; gap: 5px; }
+.callout { font-size: 12.8px; color: var(--ink-secondary); background: var(--code-bg); border-radius: 8px; padding: 10px 14px; margin-top: 6px; }
+.callout b { color: var(--ink-primary); }
+.tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+.tab-btn { font-size: 12.5px; padding: 6px 13px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink-secondary); cursor: pointer; }
+.tab-btn.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+footer { text-align: center; color: var(--ink-muted); font-size: 11.5px; margin-top: 30px; }
+
+.intro-card { border-color: var(--accent); }
+.review-points-card { background: var(--surface-2); }
+.review-point { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); }
+.review-point:first-of-type { border-top: none; }
+.rp-num { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+.rp-title { font-weight: 600; font-size: 13.5px; margin-bottom: 4px; }
+.rp-desc { font-size: 12.5px; color: var(--ink-secondary); line-height: 1.6; }
+.gloss { font-size: 11px; color: var(--ink-muted); font-weight: 400; }
+
+.notes-fab { position: fixed; right: 20px; bottom: 20px; z-index: 50; background: var(--accent); color: var(--accent-ink); border: none; border-radius: 999px; padding: 12px 18px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.22); }
+.notes-panel { position: fixed; right: 20px; bottom: 20px; z-index: 50; width: 340px; max-width: calc(100vw - 40px); background: var(--surface-1); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.28); display: none; flex-direction: column; overflow: hidden; }
+.notes-panel.open { display: flex; }
+.notes-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.notes-head b { font-size: 13.5px; }
+.notes-close { background: none; border: none; color: var(--ink-muted); font-size: 16px; cursor: pointer; line-height: 1; }
+.notes-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.notes-body textarea { width: 100%; min-height: 140px; resize: vertical; border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 10px; font-size: 12.8px; background: var(--surface-2); color: var(--ink-primary); font-family: inherit; box-sizing: border-box; }
+.notes-body textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.notes-actions { display: flex; gap: 8px; align-items: center; }
+.notes-actions button { flex: 1; font-size: 12px; padding: 7px 10px; border-radius: 7px; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--ink-secondary); cursor: pointer; }
+.notes-actions button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.notes-status { font-size: 11px; color: var(--ink-muted); min-height: 14px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="masthead">
+    <div class="masthead-top">
+      <div>
+        <h1>微生物文献知识库本体 &middot; 结构浏览器</h1>
+        <div class="subtitle">类层级、文献/专利证据网络图、推理定义类与属性列表</div>
+        <div class="source-path">/Users/fanjie/wonderlab/project/ontology/microbiome_literature_ontology.owl</div>
+        <div class="version-note">v5 &middot; 新增 HealthCondition 细分表型层级、Author 实体（通讯作者/合作网络 join key）</div>
+      </div>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <section class="card intro-card">
+    <h2>本体结构说明</h2>
+    <p class="section-desc">本页面呈现微生物组文献知识库的本体（ontology）结构，用于为文献与专利中抽取的实体——菌株、代谢物、宿主生物过程、健康表型等——及其相互关系提供统一的语义定义，作为下游知识图谱的 schema 层。Schema 确定后，无论是人工标注还是 LLM 自动抽取，产出数据均遵循同一套受控词表与关系约束，具备跨文献聚合、路径查询及部分自动推理能力。</p>
+    <p class="section-desc">建议浏览顺序：<b>网络图</b>展示证据来源（文献/专利）与各语义分支的连接关系；<b>类层级</b>可查阅具体类目的定义与说明；<b>属性一览</b>列出全部对象/数据属性及其逻辑特性（FunctionalProperty、TransitiveProperty、SymmetricProperty 等），悬停徽标查看简要说明，不要求预先具备描述逻辑（Description Logic）背景。</p>
+    <p class="section-desc" style="margin-bottom:0">发现建模问题或有修改意见，可记录在右下角备注栏，支持一键复制导出；内容保存在本机浏览器 localStorage，不做跨设备同步。</p>
+  </section>
+
+  <section class="card review-points-card">
+    <h2>建模范围与已知局限</h2>
+    <p class="section-desc">以下几处是当前设计中存在多种合理实现方式、尚未定论的建模选择，其余细节性设计不在此列出。</p>
+    <div class="review-point">
+      <div class="rp-num">①</div>
+      <div class="rp-body">
+        <div class="rp-title">综述类文献是否应约束为不含实验数据</div>
+        <div class="rp-desc">综述（Review）类文献在语义上通常不涉及原创实验，但当前 schema 未对此施加硬性约束（即未声明 ReviewArticle 与 hasExperiment/hasBioinformaticsAnalysis 的不相容公理）。加约束的收益是可自动拦截"综述被误标注实验数据"的录入错误；代价是若某综述确实包含作者补充的原创再分析，会被误判为不一致。</div>
+      </div>
+    </div>
+    <div class="review-point">
+      <div class="rp-num">②</div>
+      <div class="rp-body">
+        <div class="rp-title">体内实验动物物种与宿主类型（HostType）词表尚未统一</div>
+        <div class="rp-desc">"体内实验所用动物物种"与"宿主类型"（人/小鼠/果蝇……）目前是两套独立的自由文本字段，未做关联。统一后可支持"检索所有以小鼠为模型的体内实验"这类跨字段查询；代价是需要额外的建模工作，且历史数据若两侧填写口径不一致，统一后可能暴露既有数据的规范性问题。</div>
+      </div>
+    </div>
+    <div class="review-point">
+      <div class="rp-num">③</div>
+      <div class="rp-body">
+        <div class="rp-title">ResearchArticle 与 ClinicalTrialArticle 是否合并</div>
+        <div class="rp-desc">当前两者作为独立的互斥子类分别管理，粒度更细；若业务查询只关心"研究型 / 综述 / 其他"的粗粒度划分，合并为单一类别会更简洁，但会损失临床试验这一细分标签。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>文献 / 专利证据网络图</h2>
+    <p class="section-desc">以 EvidenceSource（证据来源，Paper 与 Patent 的共同上位类）为中心，展开其一跳可达的全部 32 个类节点（含 Author 作者实体、HealthCondition 细分表型）。灰色实线为正向抽取关系；蓝色实线为声明了 owl:inverseOf 的双向可查关系（如 hasPhenotype ↔ isPhenotypeOf）；虚线为 rdfs:subClassOf；黄色虚线为 involvesStrain 属性链（owl:propertyChainAxiom）——由功能方向经证据来源推理直达关联菌株，属推理产生的隐含关系，非人工断言。节点支持拖拽重新布局与滚轮缩放，悬停节点高亮其关联边。</p>
+    <div class="net-wrap">
+      <svg id="netsvg"></svg>
+      <div class="net-toolbar">
+        <button class="net-btn" id="net-reset">重新布局</button>
+      </div>
+      <div class="net-tooltip" id="net-tooltip"></div>
+    </div>
+    <div class="net-legend">
+      <span><span class="swatch"></span>正向抽取关系</span>
+      <span><span class="swatch bidir"></span>有反向属性（双向可查）</span>
+      <span><span class="swatch subclass"></span>subClassOf</span>
+      <span><span class="swatch chain"></span>involvesStrain 属性链（推理得出）</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>推理定义类 <span class="hint">Reasoner-inferred / constrained classes</span></h2>
+    <p class="section-desc">此处类别不依赖人工标注，而是由 DL 推理器根据逻辑定义自动判定成员资格，对应两类公理：<b>充分必要条件</b>（owl:equivalentClass，满足条件即被自动分类）与<b>必要条件</b>（rdfs:subClassOf + owl:Restriction，隶属该类必须满足条件，但满足条件不蕴含隶属关系，主要用于数据一致性校验）。两类公理均已通过 HermiT 推理器实测验证（含正向分类与反向不一致检测）。</p>
+    <div class="defined-grid" id="defined-grid"></div>
+  </section>
+
+  <section class="card">
+    <h2>类层级</h2>
+    <p class="section-desc">按一级语义分支分组，点击展开子类；点击类名查看定义说明及相关属性。斜体条目为该类下的具体个体（instance），种/株级个体按学名命名规范排版；橙色「示例」标记为验证推理用的演示数据，非正式语料。</p>
+    <div class="search-row">
+      <input type="search" id="tree-search" placeholder="搜索类名 / 个体 / id&hellip;">
+      <span class="hint" id="tree-count"></span>
+    </div>
+    <ul class="tree" id="tree"></ul>
+  </section>
+
+  <section class="card">
+    <h2>属性一览</h2>
+    <p class="section-desc">domain &rarr; range 表示该关系的定义域与值域。三类颜色徽标对应属性的逻辑特性：蓝色「F」= FunctionalProperty，同一主语至多一个取值，用于数据一致性校验（如一篇文献不应有两个不同的 DOI）；绿色「T」= TransitiveProperty，关系沿链条自动传递（如分类学阶元"界→门→纲"逐级断言后，可直接推出"界"与某具体菌株的隶属关系，无需逐级连接）；紫色「S」= SymmetricProperty，关系双向对称，断言一次即隐含反向关系成立（如作者合作网络中 A collaboratesWith B 可推出 B collaboratesWith A）。</p>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="obj">对象属性</button>
+      <button class="tab-btn" data-tab="data">数据属性</button>
+    </div>
+    <div class="tab-panel active" id="tab-obj">
+      <div class="search-row">
+        <input type="search" id="rel-search" placeholder="搜索关系名 / 类名&hellip;">
+        <span class="hint" id="rel-count"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="rel-table"><thead><tr><th>关系</th><th>domain &rarr; range</th><th>父属性 / 逆属性</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="tab-panel" id="tab-data">
+      <div class="table-wrap">
+        <table id="data-table"><thead><tr><th>属性</th><th>domain &rarr; range</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="callout" id="disjoint-note"></div>
+  </section>
+
+  <footer id="footer"></footer>
+</div>
+
+<button class="notes-fab" id="notes-fab">📝 备注 / 反馈</button>
+<div class="notes-panel" id="notes-panel">
+  <div class="notes-head">
+    <b>备注 / 反馈</b>
+    <button class="notes-close" id="notes-close" aria-label="关闭">&times;</button>
+  </div>
+  <div class="notes-body">
+    <textarea id="notes-text" placeholder="记录建模问题、术语核对意见或修改建议，例如：①同意增加互斥约束 / ②建议暂缓统一宿主类型词表 / ③赞同合并 ResearchArticle 与 ClinicalTrialArticle……"></textarea>
+    <div class="notes-actions">
+      <button id="notes-copy" class="primary">复制全部备注</button>
+      <button id="notes-clear">清空</button>
+    </div>
+    <div class="notes-status" id="notes-status"></div>
+  </div>
+</div>
+
+<script id="ontology-data" type="application/json">{"classes": {"MicrobialGenus": {"id": "MicrobialGenus", "zh": "属", "en": "Microbial genus", "parents": ["Microbe"], "comment": "用户补充要求：文章包括菌属、菌种、菌株。属 > 种 > 株 是层层嵌套的关系，用 hasSubTaxon 属性逐级连接（科→属→种→株），而不是三条各自独立的属性——这样属性可以标记为 TransitiveProperty，推理器能自动算出跨级别的包含关系（例如从“科”直接推出它包含哪些“株”）。", "equiv": false, "necessary": false}, "OtherArticle": {"id": "OtherArticle", "zh": "其他文章", "en": "Other article", "parents": ["Paper"], "comment": "文献类型中的其他文章。", "equiv": false, "necessary": false}, "Phenotype": {"id": "Phenotype", "zh": "表型", "en": "Phenotype", "parents": ["Host"], "comment": "Excel 二级结构：宿主 Host > 表型 Phenotype。即用户所说的“健康结局”一类概念——文献报告的宿主健康功能变化。这是 13 个粗粒度功能方向的固定词表；具体到某个研究课题/病症（如“更年期”）时，用下面的 HealthCondition 承接，通过 hasSubCondition 挂在对应的功能方向下。", "equiv": false, "necessary": false}, "Sample": {"id": "Sample", "zh": "样本", "en": "Sample", "parents": ["KnowledgeStructure"], "comment": "代表一次生信分析中具体使用的某一份样本记录（例如“某文献第 3 组的粪便样本”），是真实存在的实例化实体。原设计里“样本信息 SampleInformation”只是 Excel 表头分组，样本类型/来源直接挂在 BioinformaticsAnalysis 上，无法表达“某一份具体样本”这个概念；现改为 BioinformaticsAnalysis 通过 hasSample 关联到具体的 Sample，再由 Sample 通过 hasSampleType/hasSampleSource 描述其类型和来源。", "equiv": false, "necessary": false}, "Algorithm": {"id": "Algorithm", "zh": "算法", "en": "Algorithm", "parents": ["AnalysisMethod"], "comment": "生信分析使用的算法。", "equiv": false, "necessary": false}, "ResearchArticle": {"id": "ResearchArticle", "zh": "研究型文章", "en": "Research article", "parents": ["Paper"], "comment": "文献类型中的研究型文章。", "equiv": false, "necessary": false}, "EnvironmentalStressor": {"id": "EnvironmentalStressor", "zh": "环境胁迫因素", "en": "Environmental stressor", "parents": ["KnowledgeStructure"], "comment": "微生物在宿主体内定殖前需要耐受的环境因素，例如胃酸、胆盐。用户补充要求新增，专门用来支撑“益生菌须耐受胃酸胆盐”这条必要条件公理。与闭合词表不同，这两个个体是固定的、可被公理引用的词表，不属于“开放留待扩展”的类别。", "equiv": false, "necessary": false}, "HostGene": {"id": "HostGene", "zh": "基因", "en": "Gene", "parents": ["Target"], "comment": "Excel 三级结构：宿主生物过程 Process > 靶点 Target > 基因 Gene", "equiv": false, "necessary": false}, "Model": {"id": "Model", "zh": "模型", "en": "Model", "parents": ["KnowledgeStructure"], "comment": "实验模型的上位类。", "equiv": false, "necessary": false}, "Study": {"id": "Study", "zh": "研究内容", "en": "Study", "parents": ["KnowledgeStructure"], "comment": "承接文章中具体研究、实验或分析的信息。", "equiv": false, "necessary": false}, "SampleType": {"id": "SampleType", "zh": "样本类型", "en": null, "parents": ["KnowledgeStructure"], "comment": "Excel 二级结构：生信分析 > 样本类型。描述的是某个 Sample 的类型，不再挂在已删除的 SampleInformation 分组类下。", "equiv": false, "necessary": false}, "InVivoExperiment": {"id": "InVivoExperiment", "zh": "体内实验", "en": "In vivo experiment", "parents": ["Experiment"], "comment": "体内实验模块，用于解释动物模型、造模方式和干预方式。", "equiv": false, "necessary": false}, "CellModel": {"id": "CellModel", "zh": "细胞模型", "en": null, "parents": ["Model"], "comment": "Excel 二级结构：体外实验 > 细胞模型", "equiv": false, "necessary": false}, "HostProtein": {"id": "HostProtein", "zh": "蛋白", "en": "Protein", "parents": ["Target"], "comment": "Excel 三级结构：宿主生物过程 Process > 靶点 Target > 蛋白 Protein", "equiv": false, "necessary": false}, "InVitroExperiment": {"id": "InVitroExperiment", "zh": "体外实验", "en": "In vitro experiment", "parents": ["Experiment"], "comment": "体外实验模块，用于解释细胞模型、诱导方式和体外实验处理。", "equiv": false, "necessary": false}, "MicrobialGene": {"id": "MicrobialGene", "zh": "微生物基因", "en": "Microbial gene", "parents": ["MicrobeRelatedMolecule"], "comment": "Excel 二级结构：微生物相关分子 Molecule > 微生物基因 Gene", "equiv": false, "necessary": false}, "Author": {"id": "Author", "zh": "作者", "en": "Author", "parents": ["KnowledgeStructure"], "comment": "用户补充要求新增：作者实体，用于承载通讯作者身份、机构、以及跨系统关联。本体本身不重复存放\"近三年发表文献\"和\"合作网络\"这类会频繁变化、且已经在团队 rpa_db 库里由 OpenAlex 数据管道维护的信息（表 pubmed_authors / author_recent_works / author_collaboration_edges / author_employment）——本体里的 Author 只保留 hasORCID / hasOpenAlexAuthorID 作为跟那几张表做关联查询的 join key，避免图谱里存一份很快会过期的数据副本。", "equiv": false, "necessary": false}, "HostType": {"id": "HostType", "zh": "宿主类型", "en": null, "parents": ["Host"], "comment": "Excel 二级结构：宿主 Host > 宿主类型", "equiv": false, "necessary": false}, "Paper": {"id": "Paper", "zh": "文献信息", "en": "Paper", "parents": ["EvidenceSource"], "comment": "知识库中的文献或文章，是连接微生物、宿主、分子、过程、实验和生信分析的中心入口之一（另一个是 Patent）。", "equiv": false, "necessary": false}, "HealthCondition": {"id": "HealthCondition", "zh": "细分健康主题", "en": "Health condition", "parents": ["KnowledgeStructure"], "comment": "用户补充要求新增：细分健康主题/具体病症，如\"更年期综合征\"\"多囊卵巢综合征\"。13 个 Phenotype 功能方向是粗粒度的固定分类，查\"更年期相关研究\"这种具体课题时会被淹没在同一大类的其他内容里；HealthCondition 是开放词表，专门承接这类更具体的研究主题，通过 hasSubCondition 挂在对应的 Phenotype 下面（如\"更年期综合征\"挂在\"女性私护\"下）。", "equiv": false, "necessary": false}, "MicrobialClass": {"id": "MicrobialClass", "zh": "纲", "en": "Class (taxonomic rank)", "parents": ["Microbe"], "comment": "细菌分类学七级阶元之一，门的下一级。注意这里的“纲”是生物分类学阶元，与 OWL 里的 owl:Class 无关，仅 ID 里含 Class 字样容易混淆，读中英文 label 即可区分。", "equiv": false, "necessary": false}, "MicrobialStrain": {"id": "MicrobialStrain", "zh": "株", "en": null, "parents": ["Microbe"], "comment": "Excel 二级结构：微生物 Microbe > 菌株。种 hasSubTaxon 株，是分类学阶元链条里最细的一级。", "equiv": false, "necessary": false}, "InVivoInterventionMethod": {"id": "InVivoInterventionMethod", "zh": "体内实验干预方式", "en": null, "parents": ["InVivoExperiment"], "comment": "Excel 二级结构：体内实验 > 体内实验干预方式", "equiv": false, "necessary": false}, "MicrobialOrder": {"id": "MicrobialOrder", "zh": "目", "en": "Order", "parents": ["Microbe"], "comment": "细菌分类学七级阶元之一，纲的下一级。", "equiv": false, "necessary": false}, "Experiment": {"id": "Experiment", "zh": "实验", "en": "Experiment", "parents": ["Study"], "comment": "实验相关结构的上位类，体外实验和体内实验归入此类。", "equiv": false, "necessary": false}, "InVitroTreatment": {"id": "InVitroTreatment", "zh": "体外实验处理", "en": null, "parents": ["InVitroExperiment"], "comment": "Excel 二级结构：体外实验 > 体外实验处理", "equiv": false, "necessary": false}, "AIModel": {"id": "AIModel", "zh": "AI模型", "en": "AI model", "parents": ["AnalysisMethod"], "comment": "生信分析使用的 AI 模型。", "equiv": false, "necessary": false}, "BioinformaticsAnalysis": {"id": "BioinformaticsAnalysis", "zh": "生信分析", "en": "Bioinformatics analysis", "parents": ["Study"], "comment": "生物信息学分析相关结构独立归入此类。", "equiv": false, "necessary": false}, "EvidenceSource": {"id": "EvidenceSource", "zh": "证据来源", "en": "Evidence source", "parents": ["KnowledgeStructure"], "comment": "用户补充要求新增：证据来源的共同上位类，Paper（文献）和 Patent（专利）都是其子类。此前 mentionsMicrobe/hasPhenotype/hasHost/investigatesMolecule/investigatesProcess 等“从来源里抽取出了什么”的关系 domain 都写死在 Paper 上，专利没法复用；现在统一挂到 EvidenceSource，Paper 和 Patent 都能用同一套关系表达抽取结果，文献特有的 DOI/IF/中科院分区/作者、专利特有的专利号/申请人等字段仍分别留在各自子类上。", "equiv": false, "necessary": false}, "BioinformaticsTool": {"id": "BioinformaticsTool", "zh": "生信工具", "en": "Bioinformatics tool", "parents": ["AnalysisMethod"], "comment": "生信分析使用的具体工具。", "equiv": false, "necessary": false}, "KnowledgeStructure": {"id": "KnowledgeStructure", "zh": "知识结构", "en": "Knowledge structure", "parents": [], "comment": "用于容纳从 Excel 标签框架抽取出的全部结构节点。", "equiv": false, "necessary": false}, "MicrobialFamily": {"id": "MicrobialFamily", "zh": "科", "en": "Family", "parents": ["Microbe"], "comment": "细菌分类学七级阶元之一，目的下一级，属的上一级。", "equiv": false, "necessary": false}, "Pathway": {"id": "Pathway", "zh": "信号通路", "en": "Pathway", "parents": ["HostBiologicalProcess"], "comment": "Excel 二级结构：宿主生物过程 Process > 信号通路 Pathway", "equiv": false, "necessary": false}, "AnimalModel": {"id": "AnimalModel", "zh": "动物模型", "en": null, "parents": ["Model"], "comment": "Excel 二级结构：体内实验 > 动物模型", "equiv": false, "necessary": false}, "CASJournalTopTier": {"id": "CASJournalTopTier", "zh": "中科院一区文献（推理定义）", "en": "CAS Q1 journal study (inferred)", "parents": [], "comment": "推理器自动分类条件：中科院分区为一区的文献。最简单的 hasValue 限定示例，适合作为第一次在 Protégé 里验证推理效果的例子。", "equiv": true, "necessary": false}, "Microbe": {"id": "Microbe", "zh": "微生物", "en": "Microbe", "parents": ["KnowledgeStructure"], "comment": "Excel 一级结构：微生物 Microbe", "equiv": false, "necessary": false}, "ReviewArticle": {"id": "ReviewArticle", "zh": "综述", "en": "Review article", "parents": ["Paper"], "comment": "文献类型中的综述文章。", "equiv": false, "necessary": false}, "Target": {"id": "Target", "zh": "靶点", "en": "Target", "parents": ["HostBiologicalProcess"], "comment": "Excel 二级结构：宿主生物过程 Process > 靶点 Target", "equiv": false, "necessary": false}, "GutHealthMetaboliteStudy": {"id": "GutHealthMetaboliteStudy", "zh": "肠道健康代谢物文献（推理定义）", "en": "Gut-health metabolite study (inferred)", "parents": [], "comment": "推理器自动分类条件：表型标注为“消化道健康”、且记录了某个代谢物的文献。演示了 hasValue（限定到具体个体）与 someValuesFrom（限定到某个类）组合使用。", "equiv": true, "necessary": false}, "MicrobialKingdom": {"id": "MicrobialKingdom", "zh": "界", "en": "Kingdom", "parents": ["Microbe"], "comment": "细菌分类学七级阶元之一。用户补充要求：菌种/菌株的物种分类需覆盖界门纲目科属种，且属>种>株是层层嵌套的关系（见 hasSubTaxon 属性）。", "equiv": false, "necessary": false}, "Software": {"id": "Software", "zh": "软件", "en": "Software", "parents": ["AnalysisMethod"], "comment": "生信分析使用的软件。", "equiv": false, "necessary": false}, "MicrobialEnzyme": {"id": "MicrobialEnzyme", "zh": "微生物酶", "en": "Microbial enzyme", "parents": ["MicrobeRelatedMolecule"], "comment": "Excel 二级结构：微生物相关分子 Molecule > 微生物酶 Enzyme", "equiv": false, "necessary": false}, "MicrobeRelatedMolecule": {"id": "MicrobeRelatedMolecule", "zh": "微生物相关分子", "en": "Molecule", "parents": ["KnowledgeStructure"], "comment": "Excel 一级结构：微生物相关分子 Molecule", "equiv": false, "necessary": false}, "SequencingPlatform": {"id": "SequencingPlatform", "zh": "测序平台", "en": null, "parents": ["KnowledgeStructure"], "comment": "Excel 二级结构：生信分析 > 测序平台。同上，不再挂在已删除的 SequencingInformation 分组类下。", "equiv": false, "necessary": false}, "Metabolite": {"id": "Metabolite", "zh": "代谢物", "en": "Metabolite", "parents": ["MicrobeRelatedMolecule"], "comment": "Excel 二级结构：微生物相关分子 Molecule > 代谢物 Metabolite", "equiv": false, "necessary": false}, "ProbioticStrain": {"id": "ProbioticStrain", "zh": "益生菌菌株", "en": "Probiotic strain", "parents": ["MicrobialStrain"], "comment": "菌株中具有益生功能、可作为益生菌使用的一类，例如鼠李糖乳杆菌 GG 株。本体末尾给它加了一条必要条件公理：益生菌菌株必须耐受胃酸和胆盐（tolerates GastricAcid、tolerates BileSalt），这是能否定殖肠道的前提条件。", "equiv": false, "necessary": true}, "SequencingRegion": {"id": "SequencingRegion", "zh": "测序区域", "en": null, "parents": ["KnowledgeStructure"], "comment": "Excel 二级结构：生信分析 > 测序区域。同上，不再挂在已删除的 SequencingInformation 分组类下。", "equiv": false, "necessary": false}, "SequencingType": {"id": "SequencingType", "zh": "测序类型", "en": null, "parents": ["KnowledgeStructure"], "comment": "Excel 二级结构：生信分析 > 测序类型。原挂在“测序信息 SequencingInformation”这一分组类下——但“测序信息”只是 Excel 表头分组，不是真实存在的“一类事物”，故删除该分组类，测序类型直接挂回顶层，通过 hasSequencingType 属性与 BioinformaticsAnalysis 关联。", "equiv": false, "necessary": false}, "AnalysisMethod": {"id": "AnalysisMethod", "zh": "分析方法", "en": "Analysis method", "parents": ["BioinformaticsAnalysis"], "comment": "生信分析使用的方法、工具、软件、算法和 AI 模型。", "equiv": false, "necessary": false}, "HostBiologicalProcess": {"id": "HostBiologicalProcess", "zh": "宿主生物过程", "en": "Host biological process", "parents": ["KnowledgeStructure"], "comment": "Excel 一级结构：宿主生物过程 Process", "equiv": false, "necessary": false}, "Receptor": {"id": "Receptor", "zh": "受体", "en": "Receptor", "parents": ["Target"], "comment": "Excel 三级结构：宿主生物过程 Process > 靶点 Target > 受体 Receptor", "equiv": false, "necessary": false}, "MicrobialSpecies": {"id": "MicrobialSpecies", "zh": "种", "en": null, "parents": ["Microbe"], "comment": "Excel 二级结构：微生物 Microbe > 菌种。属 hasSubTaxon 种。", "equiv": false, "necessary": false}, "ProbioticMechanismStudy": {"id": "ProbioticMechanismStudy", "zh": "机制串联型文献（推理定义）", "en": "Mechanism-chain study (inferred)", "parents": [], "comment": "推理器自动分类条件：同时提及某个微生物、研究某个宿主生物过程、且记录了某个代谢物——即覆盖“微生物 → 宿主过程 → 分子”完整机制链条证据的文献。对应核心关系图里的那条虚线因果链。", "equiv": true, "necessary": false}, "AnimalModelingMethod": {"id": "AnimalModelingMethod", "zh": "动物模型造模方式", "en": null, "parents": ["InVivoExperiment"], "comment": "Excel 二级结构：体内实验 > 动物模型造模方式", "equiv": false, "necessary": false}, "SampleSource": {"id": "SampleSource", "zh": "样本来源", "en": null, "parents": ["KnowledgeStructure"], "comment": "Excel 二级结构：生信分析 > 样本来源。描述的是某个 Sample 的来源人群，不再挂在已删除的 SampleInformation 分组类下。", "equiv": false, "necessary": false}, "Hormone": {"id": "Hormone", "zh": "激素", "en": "Hormone", "parents": ["Target"], "comment": "Excel 三级结构：宿主生物过程 Process > 靶点 Target > 激素 Hormone", "equiv": false, "necessary": false}, "Cytokine": {"id": "Cytokine", "zh": "细胞因子", "en": "Cytokine", "parents": ["Target"], "comment": "Excel 三级结构：宿主生物过程 Process > 靶点 Target > 细胞因子 Cytokine", "equiv": false, "necessary": false}, "Host": {"id": "Host", "zh": "宿主", "en": "Host", "parents": ["KnowledgeStructure"], "comment": "Excel 一级结构：宿主 Host", "equiv": false, "necessary": false}, "HostTissue": {"id": "HostTissue", "zh": "宿主组织", "en": "Host tissue", "parents": ["Host"], "comment": "宿主体内微生物可以定殖的具体组织/部位，例如肠道、皮肤、口腔。用户补充要求新增，配合 colonizes（定殖于）属性使用。Excel 原表未单独列出该层级，此前“宿主类型”里的“细胞、类器官”等条目描述的是宿主整体类型而非具体定殖部位，故单独建类。", "equiv": false, "necessary": false}, "Patent": {"id": "Patent", "zh": "专利", "en": "Patent", "parents": ["EvidenceSource"], "comment": "用户补充要求新增：专利证据来源，主要用于承载从专利里提取出的菌种及其功能方向信息。专利特有的元数据（专利号、申请人、申请/公开年份等）见 hasPatentNumber 等属性；抽取出的菌种/宿主/分子/过程等复用 EvidenceSource 上的通用关系（mentionsMicrobialStrain、hasPhenotype 等），与 Paper 共享同一套属性，不需要重新定义一套“专利专用”的抽取关系。", "equiv": false, "necessary": false}, "CASJournalDivision": {"id": "CASJournalDivision", "zh": "中科院分区", "en": "CAS journal division", "parents": ["KnowledgeStructure"], "comment": "期刊中科院分区等级，闭合词表：一区、二区、三区、四区。具体分区个体定义在本文件末尾。", "equiv": false, "necessary": false}, "MicrobialPhylum": {"id": "MicrobialPhylum", "zh": "门", "en": "Phylum", "parents": ["Microbe"], "comment": "细菌分类学七级阶元之一，界的下一级。", "equiv": false, "necessary": false}, "MicrobialProtein": {"id": "MicrobialProtein", "zh": "微生物蛋白", "en": "Microbial protein", "parents": ["MicrobeRelatedMolecule"], "comment": "Excel 二级结构：微生物相关分子 Molecule > 微生物蛋白 Protein", "equiv": false, "necessary": false}, "ClinicalTrialArticle": {"id": "ClinicalTrialArticle", "zh": "临床试验文章", "en": "Clinical trial article", "parents": ["Paper"], "comment": "文献类型中的临床试验文章。", "equiv": false, "necessary": false}, "SequencingMode": {"id": "SequencingMode", "zh": "测序方式", "en": null, "parents": ["KnowledgeStructure"], "comment": "Excel 二级结构：生信分析 > 测序方式。同上，不再挂在已删除的 SequencingInformation 分组类下。", "equiv": false, "necessary": false}, "DosageForm": {"id": "DosageForm", "zh": "给药剂型", "en": "Dosage form", "parents": ["KnowledgeStructure"], "comment": "干预物质的物理形态，例如胶囊剂、粉剂、溶液。用户补充要求新增，与体内实验干预方式（灌胃/注射/涂抹/饮食干预，描述的是“怎么给”）是不同维度——剂型描述的是“给的是什么形态的东西”。开放词表，本体末尾给了 3 个示例个体，非穷举。", "equiv": false, "necessary": false}}, "objprops": {"hasHostGene": {"id": "hasHostGene", "zh": "具有基因", "en": "has Gene", "domain": "EvidenceSource", "range": "HostGene", "subPropertyOf": "investigatesProcess", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasReceptor": {"id": "hasReceptor", "zh": "具有受体", "en": "has Receptor", "domain": "EvidenceSource", "range": "Receptor", "subPropertyOf": "investigatesProcess", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasHostProtein": {"id": "hasHostProtein", "zh": "具有蛋白", "en": "has Protein", "domain": "EvidenceSource", "range": "HostProtein", "subPropertyOf": "investigatesProcess", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "investigatesMolecule": {"id": "investigatesMolecule", "zh": "研究微生物相关分子", "en": "investigates molecule", "domain": "EvidenceSource", "range": "MicrobeRelatedMolecule", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "isStrainMentionedIn": {"id": "isStrainMentionedIn", "zh": "被提及于", "en": "is strain mentioned in", "domain": "MicrobialStrain", "range": "EvidenceSource", "subPropertyOf": null, "inverseOf": "mentionsMicrobialStrain", "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasMicrobialEnzyme": {"id": "hasMicrobialEnzyme", "zh": "具有微生物酶", "en": "has Microbial enzyme", "domain": "EvidenceSource", "range": "MicrobialEnzyme", "subPropertyOf": "investigatesMolecule", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "usesBioinformaticsTool": {"id": "usesBioinformaticsTool", "zh": "使用生信工具", "en": "uses bioinformatics tool", "domain": "BioinformaticsAnalysis", "range": "BioinformaticsTool", "subPropertyOf": "usesAnalysisMethod", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasCytokine": {"id": "hasCytokine", "zh": "具有细胞因子", "en": "has Cytokine", "domain": "EvidenceSource", "range": "Cytokine", "subPropertyOf": "investigatesProcess", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "investigatesCondition": {"id": "investigatesCondition", "zh": "研究细分主题", "en": "investigates condition", "domain": "EvidenceSource", "range": "HealthCondition", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasSample": {"id": "hasSample", "zh": "具有样本", "en": "has sample", "domain": "BioinformaticsAnalysis", "range": "Sample", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "usesAIModel": {"id": "usesAIModel", "zh": "使用 AI 模型", "en": "uses AI model", "domain": "BioinformaticsAnalysis", "range": "AIModel", "subPropertyOf": "usesAnalysisMethod", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "usesAnimalModel": {"id": "usesAnimalModel", "zh": "使用动物模型", "en": "uses animal model", "domain": "InVivoExperiment", "range": "AnimalModel", "subPropertyOf": "usesModel", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasSampleType": {"id": "hasSampleType", "zh": "具有样本类型", "en": "has sample type", "domain": "Sample", "range": "SampleType", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasInVivoInterventionMethod": {"id": "hasInVivoInterventionMethod", "zh": "具有体内实验干预方式", "en": "has InVivoInterventionMethod", "domain": "InVivoExperiment", "range": "InVivoInterventionMethod", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasSubCondition": {"id": "hasSubCondition", "zh": "具有细分主题", "en": "has sub-condition", "domain": "Phenotype", "range": "HealthCondition", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasHormone": {"id": "hasHormone", "zh": "具有激素", "en": "has Hormone", "domain": "EvidenceSource", "range": "Hormone", "subPropertyOf": "investigatesProcess", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasMicrobialGene": {"id": "hasMicrobialGene", "zh": "具有微生物基因", "en": "has Microbial gene", "domain": "EvidenceSource", "range": "MicrobialGene", "subPropertyOf": "investigatesMolecule", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasSequencingRegion": {"id": "hasSequencingRegion", "zh": "具有测序区域", "en": "has sequencing region", "domain": "BioinformaticsAnalysis", "range": "SequencingRegion", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "usesModel": {"id": "usesModel", "zh": "使用模型", "en": "uses model", "domain": "Experiment", "range": "Model", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasStudy": {"id": "hasStudy", "zh": "包含研究内容", "en": "has study", "domain": "Paper", "range": "Study", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasInVitroTreatment": {"id": "hasInVitroTreatment", "zh": "具有体外实验处理", "en": "has InVitroTreatment", "domain": "InVitroExperiment", "range": "InVitroTreatment", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "collaboratesWith": {"id": "collaboratesWith", "zh": "与…合作", "en": "collaborates with", "domain": "Author", "range": "Author", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": true}, "colonizes": {"id": "colonizes", "zh": "定殖于", "en": "colonizes", "domain": "Microbe", "range": "Host", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasSequencingType": {"id": "hasSequencingType", "zh": "具有测序类型", "en": "has sequencing type", "domain": "BioinformaticsAnalysis", "range": "SequencingType", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "involvesStrain": {"id": "involvesStrain", "zh": "涉及菌株", "en": "involves strain", "domain": "Phenotype", "range": "MicrobialStrain", "subPropertyOf": null, "inverseOf": null, "chain": ["isPhenotypeOf", "mentionsMicrobialStrain"], "functional": false, "transitive": false, "symmetric": false}, "hasHostType": {"id": "hasHostType", "zh": "具有宿主类型", "en": "has HostType", "domain": "EvidenceSource", "range": "HostType", "subPropertyOf": "hasHost", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasCASJournalDivision": {"id": "hasCASJournalDivision", "zh": "具有中科院分区", "en": "has CAS journal division", "domain": "Paper", "range": "CASJournalDivision", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": true, "transitive": false, "symmetric": false}, "hasSequencingMode": {"id": "hasSequencingMode", "zh": "具有测序方式", "en": "has sequencing mode", "domain": "BioinformaticsAnalysis", "range": "SequencingMode", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "isConditionInvestigatedIn": {"id": "isConditionInvestigatedIn", "zh": "被研究于（细分主题）", "en": "is condition investigated in", "domain": "HealthCondition", "range": "EvidenceSource", "subPropertyOf": null, "inverseOf": "investigatesCondition", "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasCorrespondingAuthor": {"id": "hasCorrespondingAuthor", "zh": "具有通讯作者", "en": "has corresponding author", "domain": "Paper", "range": "Author", "subPropertyOf": "hasAuthorEntity", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasMicrobialProtein": {"id": "hasMicrobialProtein", "zh": "具有微生物蛋白", "en": "has Microbial protein", "domain": "EvidenceSource", "range": "MicrobialProtein", "subPropertyOf": "investigatesMolecule", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasSubTaxon": {"id": "hasSubTaxon", "zh": "具有下级分类单元", "en": "has sub-taxon", "domain": "Microbe", "range": "Microbe", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": true, "symmetric": false}, "produces": {"id": "produces", "zh": "产生", "en": "produces", "domain": "Microbe", "range": "MicrobeRelatedMolecule", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "tolerates": {"id": "tolerates", "zh": "耐受", "en": "tolerates", "domain": "Microbe", "range": "EnvironmentalStressor", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "usesCellModel": {"id": "usesCellModel", "zh": "使用细胞模型", "en": "uses cell model", "domain": "InVitroExperiment", "range": "CellModel", "subPropertyOf": "usesModel", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "isProcessInvestigatedIn": {"id": "isProcessInvestigatedIn", "zh": "被研究于", "en": "is process investigated in", "domain": "HostBiologicalProcess", "range": "EvidenceSource", "subPropertyOf": null, "inverseOf": "investigatesProcess", "chain": null, "functional": false, "transitive": false, "symmetric": false}, "isMoleculeInvestigatedIn": {"id": "isMoleculeInvestigatedIn", "zh": "被研究于（分子）", "en": "is molecule investigated in", "domain": "MicrobeRelatedMolecule", "range": "EvidenceSource", "subPropertyOf": null, "inverseOf": "investigatesMolecule", "chain": null, "functional": false, "transitive": false, "symmetric": false}, "isHostOf": {"id": "isHostOf", "zh": "是…的宿主", "en": "is host of", "domain": "Host", "range": "EvidenceSource", "subPropertyOf": null, "inverseOf": "hasHost", "chain": null, "functional": false, "transitive": false, "symmetric": false}, "usesAlgorithm": {"id": "usesAlgorithm", "zh": "使用算法", "en": "uses algorithm", "domain": "BioinformaticsAnalysis", "range": "Algorithm", "subPropertyOf": "usesAnalysisMethod", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasExperiment": {"id": "hasExperiment", "zh": "包含实验", "en": "has experiment", "domain": "Paper", "range": "Experiment", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasHost": {"id": "hasHost", "zh": "涉及宿主", "en": "has host", "domain": "EvidenceSource", "range": "Host", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "mentionsMicrobialStrain": {"id": "mentionsMicrobialStrain", "zh": "提及菌株", "en": "mentions microbial strain", "domain": "EvidenceSource", "range": "MicrobialStrain", "subPropertyOf": "mentionsMicrobe", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasPathway": {"id": "hasPathway", "zh": "具有信号通路", "en": "has Pathway", "domain": "EvidenceSource", "range": "Pathway", "subPropertyOf": "investigatesProcess", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "mentionsMicrobialSpecies": {"id": "mentionsMicrobialSpecies", "zh": "提及菌种", "en": "mentions microbial species", "domain": "EvidenceSource", "range": "MicrobialSpecies", "subPropertyOf": "mentionsMicrobe", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "affectsHostBiologicalProcess": {"id": "affectsHostBiologicalProcess", "zh": "影响宿主生物过程", "en": "affects host biological process", "domain": "Microbe", "range": "HostBiologicalProcess", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "mentionsMicrobialGenus": {"id": "mentionsMicrobialGenus", "zh": "提及菌属", "en": "mentions microbial genus", "domain": "EvidenceSource", "range": "MicrobialGenus", "subPropertyOf": "mentionsMicrobe", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "inhibits": {"id": "inhibits", "zh": "抑制", "en": "inhibits", "domain": "KnowledgeStructure", "range": "KnowledgeStructure", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "regulatesMoleculeSecretion": {"id": "regulatesMoleculeSecretion", "zh": "调节微生物相关分子的分泌", "en": "regulates molecule secretion", "domain": "HostBiologicalProcess", "range": "MicrobeRelatedMolecule", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasBioinformaticsAnalysis": {"id": "hasBioinformaticsAnalysis", "zh": "包含生信分析", "en": "has bioinformatics analysis", "domain": "Paper", "range": "BioinformaticsAnalysis", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "affectsHost": {"id": "affectsHost", "zh": "影响宿主", "en": "affects host", "domain": "MicrobeRelatedMolecule", "range": "Host", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "investigatesProcess": {"id": "investigatesProcess", "zh": "研究宿主生物过程", "en": "investigates process", "domain": "EvidenceSource", "range": "HostBiologicalProcess", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "mentionsMicrobe": {"id": "mentionsMicrobe", "zh": "提及微生物", "en": "mentions microbe", "domain": "EvidenceSource", "range": "Microbe", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasDosageForm": {"id": "hasDosageForm", "zh": "具有给药剂型", "en": "has dosage form", "domain": "InVivoInterventionMethod", "range": "DosageForm", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "usesAnalysisMethod": {"id": "usesAnalysisMethod", "zh": "使用分析方法", "en": "uses analysis method", "domain": "BioinformaticsAnalysis", "range": "AnalysisMethod", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "isPhenotypeOf": {"id": "isPhenotypeOf", "zh": "是…的功能方向", "en": "is phenotype of", "domain": "Phenotype", "range": "EvidenceSource", "subPropertyOf": null, "inverseOf": "hasPhenotype", "chain": null, "functional": false, "transitive": false, "symmetric": false}, "conditionInvolvesStrain": {"id": "conditionInvolvesStrain", "zh": "细分主题涉及菌株", "en": "condition involves strain", "domain": "HealthCondition", "range": "MicrobialStrain", "subPropertyOf": null, "inverseOf": null, "chain": ["isConditionInvestigatedIn", "mentionsMicrobialStrain"], "functional": false, "transitive": false, "symmetric": false}, "hasSampleSource": {"id": "hasSampleSource", "zh": "具有样本来源", "en": "has sample source", "domain": "Sample", "range": "SampleSource", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "usesSoftware": {"id": "usesSoftware", "zh": "使用软件", "en": "uses software", "domain": "BioinformaticsAnalysis", "range": "Software", "subPropertyOf": "usesAnalysisMethod", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasAuthorEntity": {"id": "hasAuthorEntity", "zh": "具有作者（消歧实体）", "en": "has author entity", "domain": "Paper", "range": "Author", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasPhenotype": {"id": "hasPhenotype", "zh": "涉及表型", "en": "has phenotype", "domain": "EvidenceSource", "range": "Phenotype", "subPropertyOf": "hasHost", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasSequencingPlatform": {"id": "hasSequencingPlatform", "zh": "具有测序平台", "en": "has sequencing platform", "domain": "BioinformaticsAnalysis", "range": "SequencingPlatform", "subPropertyOf": null, "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}, "hasMetabolite": {"id": "hasMetabolite", "zh": "具有代谢物", "en": "has Metabolite", "domain": "EvidenceSource", "range": "Metabolite", "subPropertyOf": "investigatesMolecule", "inverseOf": null, "chain": null, "functional": false, "transitive": false, "symmetric": false}}, "dataprops": {"hasOpenAlexAuthorID": {"id": "hasOpenAlexAuthorID", "zh": "OpenAlex 作者 ID", "en": "OpenAlex author ID", "domain": "Author", "range": "string", "functional": true}, "hasYear": {"id": "hasYear", "zh": "Year", "en": null, "domain": "Paper", "range": "int", "functional": true}, "hasAlgorithm": {"id": "hasAlgorithm", "zh": "算法", "en": null, "domain": "AnalysisMethod", "range": "string", "functional": false}, "hasImpactFactor": {"id": "hasImpactFactor", "zh": "IF", "en": "Impact Factor", "domain": "Paper", "range": "decimal", "functional": true}, "hasDrugModelingMethod": {"id": "hasDrugModelingMethod", "zh": "药物造模方法", "en": null, "domain": "AnimalModelingMethod", "range": "string", "functional": false}, "hasPublicationYear": {"id": "hasPublicationYear", "zh": "公开年份", "en": "publication year", "domain": "Patent", "range": "int", "functional": true}, "hasInductionMethod": {"id": "hasInductionMethod", "zh": "诱导方式", "en": null, "domain": "CellModel", "range": "string", "functional": false}, "hasPatentNumber": {"id": "hasPatentNumber", "zh": "专利号", "en": "patent number", "domain": "Patent", "range": "string", "functional": true}, "hasInstitution": {"id": "hasInstitution", "zh": "所属机构", "en": "institution", "domain": "Author", "range": "string", "functional": false}, "hasAnimalSpecies": {"id": "hasAnimalSpecies", "zh": "动物物种", "en": null, "domain": "AnimalModel", "range": "string", "functional": false}, "hasTitle": {"id": "hasTitle", "zh": "Title", "en": null, "domain": "Paper", "range": "string", "functional": true}, "hasBehavioralModelingMethod": {"id": "hasBehavioralModelingMethod", "zh": "行为学造模方法", "en": null, "domain": "AnimalModelingMethod", "range": "string", "functional": false}, "hasFilingYear": {"id": "hasFilingYear", "zh": "申请年份", "en": "filing year", "domain": "Patent", "range": "int", "functional": true}, "hasDOI": {"id": "hasDOI", "zh": "DOI", "en": null, "domain": "Paper", "range": "string", "functional": true}, "hasORCID": {"id": "hasORCID", "zh": "ORCID", "en": "ORCID", "domain": "Author", "range": "string", "functional": true}, "hasPatentTitle": {"id": "hasPatentTitle", "zh": "专利名称", "en": "patent title", "domain": "Patent", "range": "string", "functional": true}, "hasBioinformaticsTool": {"id": "hasBioinformaticsTool", "zh": "生信工具", "en": null, "domain": "AnalysisMethod", "range": "string", "functional": false}, "hasAuthorName": {"id": "hasAuthorName", "zh": "作者姓名", "en": "author name", "domain": "Author", "range": "string", "functional": false}, "hasRawDataLink": {"id": "hasRawDataLink", "zh": "原始数据链接", "en": "raw data link", "domain": "BioinformaticsAnalysis", "range": "anyURI", "functional": false}, "hasAIModel": {"id": "hasAIModel", "zh": "AI模型", "en": null, "domain": "AnalysisMethod", "range": "string", "functional": false}, "hasAnimalStrain": {"id": "hasAnimalStrain", "zh": "动物品系", "en": null, "domain": "AnimalModel", "range": "string", "functional": false}, "hasCitation": {"id": "hasCitation", "zh": "Citation", "en": null, "domain": "Paper", "range": "decimal", "functional": false}, "hasDosage": {"id": "hasDosage", "zh": "剂量为", "en": "has dosage", "domain": "InVivoInterventionMethod", "range": "string", "functional": false}, "hasCellName": {"id": "hasCellName", "zh": "细胞名称", "en": null, "domain": "CellModel", "range": "string", "functional": false}, "hasPatentOffice": {"id": "hasPatentOffice", "zh": "专利机构", "en": "patent office", "domain": "Patent", "range": "string", "functional": true}, "hasAuthor": {"id": "hasAuthor", "zh": "作者（原始文本）", "en": "author (raw text)", "domain": "Paper", "range": "string", "functional": false}, "hasSoftware": {"id": "hasSoftware", "zh": "软件", "en": null, "domain": "AnalysisMethod", "range": "string", "functional": false}, "hasApplicant": {"id": "hasApplicant", "zh": "申请人", "en": "applicant", "domain": "Patent", "range": "string", "functional": false}}, "individuals": {"DosageForm_Capsule": {"id": "DosageForm_Capsule", "zh": "胶囊剂", "en": "Capsule", "type": "DosageForm", "demo": false}, "Sample_Feces": {"id": "Sample_Feces", "zh": "粪便", "en": "Feces", "type": "SampleType", "demo": false}, "Intervention_Gavage": {"id": "Intervention_Gavage", "zh": "灌胃", "en": "Oral gavage", "type": "InVivoInterventionMethod", "demo": false}, "Demo_BioinformaticsAnalysis_01": {"id": "Demo_BioinformaticsAnalysis_01", "zh": "示例生信分析（用于验证推理，正式录入前可删除）", "en": null, "type": "BioinformaticsAnalysis", "demo": true}, "Intervention_DietaryIntervention": {"id": "Intervention_DietaryIntervention", "zh": "饮食干预", "en": "Dietary intervention", "type": "InVivoInterventionMethod", "demo": false}, "Species_LactobacillusRhamnosus": {"id": "Species_LactobacillusRhamnosus", "zh": "鼠李糖乳杆菌", "en": "Lactobacillus rhamnosus", "type": "MicrobialSpecies", "demo": false}, "Sample_Other": {"id": "Sample_Other", "zh": "其他", "en": "Other", "type": "SampleType", "demo": false}, "DosageForm_Solution": {"id": "DosageForm_Solution", "zh": "溶液", "en": "Solution", "type": "DosageForm", "demo": false}, "Phenotype_DigestiveHealth": {"id": "Phenotype_DigestiveHealth", "zh": "消化道健康", "en": "Digestive health", "type": "Phenotype", "demo": false}, "Demo_HostTissue_Gut": {"id": "Demo_HostTissue_Gut", "zh": "肠道（示例）", "en": "Gut (demo)", "type": "HostTissue", "demo": true}, "Sample_Tissue": {"id": "Sample_Tissue", "zh": "组织", "en": "Tissue", "type": "SampleType", "demo": false}, "CASDivision_Q2": {"id": "CASDivision_Q2", "zh": "二区", "en": "Q2", "type": "CASJournalDivision", "demo": false}, "Treatment_Metabolite": {"id": "Treatment_Metabolite", "zh": "代谢物", "en": "Metabolite treatment", "type": "InVitroTreatment", "demo": false}, "Phenotype_MetabolicHealth": {"id": "Phenotype_MetabolicHealth", "zh": "代谢健康", "en": "Metabolic health", "type": "Phenotype", "demo": false}, "CASDivision_Q3": {"id": "CASDivision_Q3", "zh": "三区", "en": "Q3", "type": "CASJournalDivision", "demo": false}, "LGG": {"id": "LGG", "zh": "鼠李糖乳杆菌 GG 株", "en": "Lactobacillus rhamnosus GG", "type": "ProbioticStrain", "demo": false}, "Phenotype_Other": {"id": "Phenotype_Other", "zh": "其他功能", "en": "Other function", "type": "Phenotype", "demo": false}, "Phenotype_OralHealth": {"id": "Phenotype_OralHealth", "zh": "口腔健康", "en": "Oral health", "type": "Phenotype", "demo": false}, "Phenotype_HealthyAging": {"id": "Phenotype_HealthyAging", "zh": "银发抗衰", "en": "Healthy aging", "type": "Phenotype", "demo": false}, "Demo_Author_B": {"id": "Demo_Author_B", "zh": "示例作者 B（用于验证推理，正式录入前可删除）", "en": null, "type": "Author", "demo": true}, "Phenotype_SkinHealth": {"id": "Phenotype_SkinHealth", "zh": "皮肤健康", "en": "Skin health", "type": "Phenotype", "demo": false}, "Treatment_LiveBacteria": {"id": "Treatment_LiveBacteria", "zh": "活菌", "en": "Live bacteria", "type": "InVitroTreatment", "demo": false}, "Intervention_TopicalApplication": {"id": "Intervention_TopicalApplication", "zh": "涂抹", "en": "Topical application", "type": "InVivoInterventionMethod", "demo": false}, "Taxon_Bacillota": {"id": "Taxon_Bacillota", "zh": "厚壁菌门", "en": "Bacillota (formerly Firmicutes)", "type": "MicrobialPhylum", "demo": false}, "Demo_Pathway_AMPK": {"id": "Demo_Pathway_AMPK", "zh": "AMPK 通路（示例）", "en": "AMPK pathway (demo)", "type": "Pathway", "demo": true}, "BileSalt": {"id": "BileSalt", "zh": "胆盐", "en": "Bile salt", "type": "EnvironmentalStressor", "demo": false}, "Taxon_Lactobacillaceae": {"id": "Taxon_Lactobacillaceae", "zh": "乳杆菌科", "en": "Lactobacillaceae", "type": "MicrobialFamily", "demo": false}, "Metabolite_Equol": {"id": "Metabolite_Equol", "zh": "雌马酚", "en": "Equol", "type": "Metabolite", "demo": false}, "CASDivision_Q1": {"id": "CASDivision_Q1", "zh": "一区", "en": "Q1", "type": "CASJournalDivision", "demo": false}, "Demo_Metabolite_SCFA": {"id": "Demo_Metabolite_SCFA", "zh": "短链脂肪酸 SCFA（示例）", "en": "Short-chain fatty acid (demo)", "type": "Metabolite", "demo": true}, "Phenotype_ChildGrowth": {"id": "Phenotype_ChildGrowth", "zh": "儿童成长", "en": "Child growth", "type": "Phenotype", "demo": false}, "Sample_Blood": {"id": "Sample_Blood", "zh": "血液", "en": "Blood", "type": "SampleType", "demo": false}, "Treatment_InactivatedBacteria": {"id": "Treatment_InactivatedBacteria", "zh": "灭活菌", "en": "Inactivated bacteria", "type": "InVitroTreatment", "demo": false}, "DemoSample_01": {"id": "DemoSample_01", "zh": "示例样本（用于验证推理，正式录入前可删除）", "en": null, "type": "Sample", "demo": true}, "Taxon_Bacilli": {"id": "Taxon_Bacilli", "zh": "芽孢杆菌纲", "en": "Bacilli", "type": "MicrobialClass", "demo": false}, "Taxon_Bacteria": {"id": "Taxon_Bacteria", "zh": "细菌界", "en": "Bacteria", "type": "MicrobialKingdom", "demo": false}, "SampleSource_Adult": {"id": "SampleSource_Adult", "zh": "成人", "en": "Adult", "type": "SampleSource", "demo": false}, "Phenotype_CancerSupport": {"id": "Phenotype_CancerSupport", "zh": "肿瘤/癌症辅助", "en": "Cancer support", "type": "Phenotype", "demo": false}, "DosageForm_Powder": {"id": "DosageForm_Powder", "zh": "粉剂", "en": "Powder", "type": "DosageForm", "demo": false}, "Phenotype_GutMicrobiotaTesting": {"id": "Phenotype_GutMicrobiotaTesting", "zh": "肠菌检测", "en": "Gut microbiota testing", "type": "Phenotype", "demo": false}, "DemoPatent_01": {"id": "DemoPatent_01", "zh": "示例专利（用于验证 involvesStrain 属性链，正式录入前可删除）", "en": null, "type": "Patent", "demo": true}, "CASDivision_Q4": {"id": "CASDivision_Q4", "zh": "四区", "en": "Q4", "type": "CASJournalDivision", "demo": false}, "DemoPaper_Equol_01": {"id": "DemoPaper_Equol_01", "zh": "示例文献：产雌马酚菌株与更年期（用于验证推理，正式录入前可删除）", "en": null, "type": "Paper", "demo": true}, "Phenotype_MentalHealth": {"id": "Phenotype_MentalHealth", "zh": "精神改善", "en": "Mental health improvement", "type": "Phenotype", "demo": false}, "Taxon_Lactobacillales": {"id": "Taxon_Lactobacillales", "zh": "乳杆菌目", "en": "Lactobacillales", "type": "MicrobialOrder", "demo": false}, "Intervention_Injection": {"id": "Intervention_Injection", "zh": "注射", "en": "Injection", "type": "InVivoInterventionMethod", "demo": false}, "Demo_Author_A": {"id": "Demo_Author_A", "zh": "示例作者 A（通讯作者，用于验证推理，正式录入前可删除）", "en": null, "type": "Author", "demo": true}, "GastricAcid": {"id": "GastricAcid", "zh": "胃酸", "en": "Gastric acid", "type": "EnvironmentalStressor", "demo": false}, "DemoPaper_MechanismExample": {"id": "DemoPaper_MechanismExample", "zh": "示例文献（用于验证推理，正式录入前可删除）", "en": null, "type": "Paper", "demo": true}, "Sample_Skin": {"id": "Sample_Skin", "zh": "皮肤", "en": "Skin", "type": "SampleType", "demo": false}, "Condition_Menopause": {"id": "Condition_Menopause", "zh": "更年期综合征", "en": "Menopause / climacteric syndrome", "type": "HealthCondition", "demo": false}, "Demo_Microbe_Lactobacillus": {"id": "Demo_Microbe_Lactobacillus", "zh": "乳杆菌属（示例）", "en": "Lactobacillus (demo)", "type": "MicrobialGenus", "demo": true}, "Phenotype_SportsHealth": {"id": "Phenotype_SportsHealth", "zh": "运动健康", "en": "Sports health", "type": "Phenotype", "demo": false}, "Strain_Lactococcus_20_92": {"id": "Strain_Lactococcus_20_92", "zh": "格氏乳球菌 20-92 株", "en": "Lactococcus garvieae strain 20-92", "type": "MicrobialStrain", "demo": false}, "Phenotype_ImmuneRegulation": {"id": "Phenotype_ImmuneRegulation", "zh": "免疫调节", "en": "Immune regulation", "type": "Phenotype", "demo": false}, "Treatment_Supernatant": {"id": "Treatment_Supernatant", "zh": "上清", "en": "Supernatant", "type": "InVitroTreatment", "demo": false}, "Phenotype_FeminineCare": {"id": "Phenotype_FeminineCare", "zh": "女性私护", "en": "Feminine care", "type": "Phenotype", "demo": false}}, "disjoints": [["InVitroExperiment", "InVivoExperiment"], ["Experiment", "BioinformaticsAnalysis"], ["Paper", "Patent"], ["ClinicalTrialArticle", "OtherArticle", "ResearchArticle", "ReviewArticle"]]}</script>
+<script id="network-data" type="application/json">{"nodes": [{"id": "Author", "zh": "作者", "en": "Author", "group": "cas"}, {"id": "BioinformaticsAnalysis", "zh": "生信分析", "en": "Bioinformatics analysis", "group": "study"}, {"id": "CASJournalDivision", "zh": "中科院分区", "en": "CAS journal division", "group": "cas"}, {"id": "ClinicalTrialArticle", "zh": "临床试验文章", "en": "Clinical trial article", "group": "hub"}, {"id": "Cytokine", "zh": "细胞因子", "en": "Cytokine", "group": "process"}, {"id": "EvidenceSource", "zh": "证据来源", "en": "Evidence source", "group": "hub"}, {"id": "Experiment", "zh": "实验", "en": "Experiment", "group": "study"}, {"id": "HealthCondition", "zh": "细分健康主题", "en": "Health condition", "group": "phenotype"}, {"id": "Hormone", "zh": "激素", "en": "Hormone", "group": "process"}, {"id": "Host", "zh": "宿主", "en": "Host", "group": "host"}, {"id": "HostBiologicalProcess", "zh": "宿主生物过程", "en": "Host biological process", "group": "process"}, {"id": "HostGene", "zh": "基因", "en": "Gene", "group": "process"}, {"id": "HostProtein", "zh": "蛋白", "en": "Protein", "group": "process"}, {"id": "HostType", "zh": "宿主类型", "en": "", "group": "host"}, {"id": "Metabolite", "zh": "代谢物", "en": "Metabolite", "group": "molecule"}, {"id": "Microbe", "zh": "微生物", "en": "Microbe", "group": "microbe"}, {"id": "MicrobeRelatedMolecule", "zh": "微生物相关分子", "en": "Molecule", "group": "molecule"}, {"id": "MicrobialEnzyme", "zh": "微生物酶", "en": "Microbial enzyme", "group": "molecule"}, {"id": "MicrobialGene", "zh": "微生物基因", "en": "Microbial gene", "group": "molecule"}, {"id": "MicrobialGenus", "zh": "属", "en": "Microbial genus", "group": "microbe"}, {"id": "MicrobialProtein", "zh": "微生物蛋白", "en": "Microbial protein", "group": "molecule"}, {"id": "MicrobialSpecies", "zh": "种", "en": "", "group": "microbe"}, {"id": "MicrobialStrain", "zh": "株", "en": "", "group": "microbe"}, {"id": "OtherArticle", "zh": "其他文章", "en": "Other article", "group": "hub"}, {"id": "Paper", "zh": "文献信息", "en": "Paper", "group": "hub"}, {"id": "Patent", "zh": "专利", "en": "Patent", "group": "hub"}, {"id": "Pathway", "zh": "信号通路", "en": "Pathway", "group": "process"}, {"id": "Phenotype", "zh": "表型", "en": "Phenotype", "group": "phenotype"}, {"id": "Receptor", "zh": "受体", "en": "Receptor", "group": "process"}, {"id": "ResearchArticle", "zh": "研究型文章", "en": "Research article", "group": "hub"}, {"id": "ReviewArticle", "zh": "综述", "en": "Review article", "group": "hub"}, {"id": "Study", "zh": "研究内容", "en": "Study", "group": "study"}], "edges": [{"from": "EvidenceSource", "to": "HostGene", "label": "hasHostGene", "kind": "forward"}, {"from": "EvidenceSource", "to": "Receptor", "label": "hasReceptor", "kind": "forward"}, {"from": "EvidenceSource", "to": "HostProtein", "label": "hasHostProtein", "kind": "forward"}, {"from": "MicrobialStrain", "to": "EvidenceSource", "label": "isStrainMentionedIn", "kind": "bidir"}, {"from": "EvidenceSource", "to": "MicrobialEnzyme", "label": "hasMicrobialEnzyme", "kind": "forward"}, {"from": "EvidenceSource", "to": "Cytokine", "label": "hasCytokine", "kind": "forward"}, {"from": "EvidenceSource", "to": "Hormone", "label": "hasHormone", "kind": "forward"}, {"from": "EvidenceSource", "to": "MicrobialGene", "label": "hasMicrobialGene", "kind": "forward"}, {"from": "Paper", "to": "Study", "label": "hasStudy", "kind": "forward"}, {"from": "EvidenceSource", "to": "HostType", "label": "hasHostType", "kind": "forward"}, {"from": "Paper", "to": "CASJournalDivision", "label": "hasCASJournalDivision", "kind": "forward"}, {"from": "HealthCondition", "to": "EvidenceSource", "label": "isConditionInvestigatedIn", "kind": "bidir"}, {"from": "Paper", "to": "Author", "label": "hasCorrespondingAuthor", "kind": "forward"}, {"from": "EvidenceSource", "to": "MicrobialProtein", "label": "hasMicrobialProtein", "kind": "forward"}, {"from": "HostBiologicalProcess", "to": "EvidenceSource", "label": "isProcessInvestigatedIn", "kind": "bidir"}, {"from": "MicrobeRelatedMolecule", "to": "EvidenceSource", "label": "isMoleculeInvestigatedIn", "kind": "bidir"}, {"from": "Host", "to": "EvidenceSource", "label": "isHostOf", "kind": "bidir"}, {"from": "Paper", "to": "Experiment", "label": "hasExperiment", "kind": "forward"}, {"from": "EvidenceSource", "to": "Pathway", "label": "hasPathway", "kind": "forward"}, {"from": "EvidenceSource", "to": "MicrobialSpecies", "label": "mentionsMicrobialSpecies", "kind": "forward"}, {"from": "EvidenceSource", "to": "MicrobialGenus", "label": "mentionsMicrobialGenus", "kind": "forward"}, {"from": "Paper", "to": "BioinformaticsAnalysis", "label": "hasBioinformaticsAnalysis", "kind": "forward"}, {"from": "EvidenceSource", "to": "Microbe", "label": "mentionsMicrobe", "kind": "forward"}, {"from": "Phenotype", "to": "EvidenceSource", "label": "isPhenotypeOf", "kind": "bidir"}, {"from": "Paper", "to": "Author", "label": "hasAuthorEntity", "kind": "forward"}, {"from": "EvidenceSource", "to": "Metabolite", "label": "hasMetabolite", "kind": "forward"}, {"from": "Patent", "to": "EvidenceSource", "label": "subClassOf", "kind": "subclass"}, {"from": "ResearchArticle", "to": "Paper", "label": "subClassOf", "kind": "subclass"}, {"from": "OtherArticle", "to": "Paper", "label": "subClassOf", "kind": "subclass"}, {"from": "Paper", "to": "EvidenceSource", "label": "subClassOf", "kind": "subclass"}, {"from": "ClinicalTrialArticle", "to": "Paper", "label": "subClassOf", "kind": "subclass"}, {"from": "ReviewArticle", "to": "Paper", "label": "subClassOf", "kind": "subclass"}, {"from": "Phenotype", "to": "MicrobialStrain", "label": "involvesStrain (property chain)", "kind": "chain"}, {"from": "HealthCondition", "to": "MicrobialStrain", "label": "conditionInvolvesStrain (property chain)", "kind": "chain"}]}</script>
+<script>
+(function () {
+  const DATA = JSON.parse(document.getElementById('ontology-data').textContent);
+  const NET = JSON.parse(document.getElementById('network-data').textContent);
+  const classes = DATA.classes, objprops = DATA.objprops, dataprops = DATA.dataprops, individuals = DATA.individuals, disjoints = DATA.disjoints;
+
+  const BRANCHES = [
+    { id: 'EvidenceSource', zh: '证据来源 EvidenceSource', slot: 'c1' },
+    { id: 'Study', zh: '研究内容 Study', slot: 'c2' },
+    { id: 'Model', zh: '模型 Model', slot: 'c3' },
+    { id: 'Microbe', zh: '微生物 Microbe', slot: 'c4' },
+    { id: 'Host', zh: '宿主 Host', slot: 'c5' },
+    { id: 'CASJournalDivision', zh: '中科院分区', slot: 'c6' },
+    { id: 'HostBiologicalProcess', zh: '宿主生物过程 Process', slot: 'c7' },
+    { id: 'MicrobeRelatedMolecule', zh: '微生物相关分子 Molecule', slot: 'c8' },
+  ];
+  const branchColor = {}; BRANCHES.forEach(b => branchColor[b.id] = 'var(--' + b.slot + ')');
+  const GROUP_COLOR = { hub:'c1', study:'c2', microbe:'c4', host:'c5', cas:'c6', process:'c7', molecule:'c8', phenotype:'c3' };
+
+  function resolveBranch(cid) {
+    let cur = cid, guard = 0;
+    while (cur && classes[cur] && classes[cur].parents && classes[cur].parents[0] && classes[cur].parents[0] !== 'KnowledgeStructure' && guard < 20) {
+      cur = classes[cur].parents[0]; guard++;
+    }
+    return cur;
+  }
+  const branchOf = {};
+  Object.keys(classes).forEach(cid => branchOf[cid] = resolveBranch(cid));
+
+  const definedIds = Object.keys(classes).filter(c => classes[c].equiv || classes[c].necessary);
+  const normalClasses = Object.keys(classes).length - definedIds.length;
+
+  const statsEl = document.getElementById('stats');
+  [[normalClasses,'类'], [definedIds.length,'推理定义类'], [Object.keys(objprops).length,'对象属性'],
+   [Object.keys(dataprops).length,'数据属性'], [Object.keys(individuals).length,'个体']
+  ].forEach(([n,l]) => {
+    const d = document.createElement('div'); d.className = 'stat-tile';
+    d.innerHTML = '<div class="num">' + n + '</div><div class="lbl">' + l + '</div>';
+    statsEl.appendChild(d);
+  });
+  document.getElementById('footer').textContent = '由 microbiome_literature_ontology.owl 自动生成 · ' + normalClasses + ' classes · ' + Object.keys(objprops).length + ' object properties · ' + Object.keys(dataprops).length + ' data properties · ' + Object.keys(individuals).length + ' individuals';
+
+  const legendEl = document.getElementById('legend');
+  const activeBranches = new Set(BRANCHES.map(b => b.id));
+  function renderLegend() {
+    legendEl.innerHTML = '';
+    BRANCHES.forEach(b => {
+      const chip = document.createElement('span');
+      chip.className = 'chip' + (activeBranches.has(b.id) ? '' : ' off');
+      chip.innerHTML = '<span class="dot" style="background:' + branchColor[b.id] + '"></span>' + b.zh;
+      chip.onclick = () => { if (activeBranches.has(b.id)) activeBranches.delete(b.id); else activeBranches.add(b.id); renderLegend(); renderTree(); renderRelTable(); };
+      legendEl.appendChild(chip);
+    });
+  }
+
+  const definedGrid = document.getElementById('defined-grid');
+  definedIds.forEach(cid => {
+    const c = classes[cid];
+    const card = document.createElement('div'); card.className = 'defined-card';
+    const kind = c.equiv ? '充分必要条件 equivalentClass' : '必要条件 subClassOf+Restriction';
+    card.innerHTML = '<h3>' + (c.zh||cid) + '</h3><div class="en">' + (c.en||'') + ' <span class="mono">#' + cid + '</span> &middot; ' + kind + '</div><div class="desc">' + (c.comment||'') + '</div>';
+    definedGrid.appendChild(card);
+  });
+
+  const childrenOf = {};
+  Object.keys(classes).forEach(cid => { const p = classes[cid].parents && classes[cid].parents[0]; if (p) (childrenOf[p]=childrenOf[p]||[]).push(cid); });
+  const indsOf = {};
+  Object.keys(individuals).forEach(iid => { const t = individuals[iid].type; if (t) (indsOf[t]=indsOf[t]||[]).push(iid); });
+
+  function formatTaxonEn(en) {
+    // Italicize the binomial (Genus species) portion per standard nomenclature convention;
+    // trailing strain/serovar designations (e.g. "GG", "strain 20-92") stay upright.
+    if (!en) return en;
+    const m = en.match(/^([A-Z][a-z]+ [a-z]+)(.*)$/);
+    if (!m) return en;
+    return '<i>' + m[1] + '</i>' + m[2];
+  }
+  function labelHtml(zh, en, id, demo) {
+    return '<span class="zh">' + (zh||id) + '</span>' + (en?'<span class="en">'+formatTaxonEn(en)+'</span>':'') + '<span class="id-tag">'+id+'</span>' + (demo?'<span class="demo-badge">示例</span>':'');
+  }
+  function buildClassNode(cid) {
+    const c = classes[cid];
+    const kids = (childrenOf[cid]||[]).slice().sort((a,b)=>(classes[a].zh||a).localeCompare(classes[b].zh||b,'zh'));
+    const inds = indsOf[cid]||[];
+    const hasKids = kids.length>0 || inds.length>0;
+    const li = document.createElement('li');
+    li.dataset.branch = branchOf[cid]||cid;
+    li.dataset.search = [c.zh,c.en,cid,c.comment].filter(Boolean).join(' ').toLowerCase();
+    const row = document.createElement('div'); row.className = 'node-row';
+    row.innerHTML = '<span class="twisty">'+(hasKids?'▸':'')+'</span><span class="dot" style="background:'+(branchColor[branchOf[cid]]||'var(--ink-muted)')+'"></span>' + labelHtml(c.zh,c.en,cid,false);
+    li.appendChild(row);
+    const detail = document.createElement('div'); detail.className = 'node-detail';
+    let relLines = '';
+    const asDomain = Object.values(objprops).filter(p => p.domain===cid);
+    const asRange = Object.values(objprops).filter(p => p.range===cid);
+    if (asDomain.length) relLines += '<div class="rel-line"><b>作为主语（'+asDomain.length+'）：</b>'+asDomain.map(p=>p.id+' &rarr; '+(classes[p.range]?(classes[p.range].zh||p.range):p.range)).join('；')+'</div>';
+    if (asRange.length) relLines += '<div class="rel-line"><b>作为宾语（'+asRange.length+'）：</b>'+asRange.map(p=>(classes[p.domain]?(classes[p.domain].zh||p.domain):p.domain)+' &rarr; '+p.id).join('；')+'</div>';
+    detail.innerHTML = (c.comment||'（无说明）') + relLines;
+    li.appendChild(detail);
+    row.onclick = () => { detail.classList.toggle('open'); if (hasKids) { const cont = li.querySelector(':scope > ul.node-children'); if (cont) { cont.classList.toggle('open'); row.classList.toggle('open'); } } };
+    if (hasKids) {
+      const ul = document.createElement('ul'); ul.className = 'node-children tree';
+      kids.forEach(k => ul.appendChild(buildClassNode(k)));
+      inds.forEach(iid => {
+        const ind = individuals[iid];
+        const ili = document.createElement('li'); ili.className = 'ind-item';
+        ili.dataset.branch = branchOf[cid]||cid;
+        ili.dataset.search = [ind.zh,ind.en,iid].filter(Boolean).join(' ').toLowerCase();
+        const irow = document.createElement('div'); irow.className = 'node-row';
+        irow.innerHTML = '<span class="twisty"></span><span class="dot" style="background:'+(branchColor[branchOf[cid]]||'var(--ink-muted)')+';opacity:.6"></span><i>'+labelHtml(ind.zh,ind.en,iid,ind.demo)+'</i>';
+        ili.appendChild(irow);
+        ul.appendChild(ili);
+      });
+      li.appendChild(ul);
+    }
+    return li;
+  }
+  const treeEl = document.getElementById('tree');
+  function renderTree() {
+    treeEl.innerHTML = '';
+    BRANCHES.filter(b => activeBranches.has(b.id)).forEach(b => treeEl.appendChild(buildClassNode(b.id)));
+    applyTreeSearch();
+  }
+  function applyTreeSearch() {
+    const q = document.getElementById('tree-search').value.trim().toLowerCase();
+    let visibleCount = 0;
+    treeEl.querySelectorAll('li').forEach(li => {
+      if (!q) { li.classList.remove('hidden-node'); return; }
+      const match = (li.dataset.search||'').includes(q);
+      const descMatch = Array.from(li.querySelectorAll('li')).some(d => (d.dataset.search||'').includes(q));
+      const show = match||descMatch;
+      li.classList.toggle('hidden-node', !show);
+      if (show && match) visibleCount++;
+      if (show && descMatch) { const row = li.querySelector(':scope > .node-row'); const cont = li.querySelector(':scope > ul.node-children'); if (cont) { cont.classList.add('open'); row && row.classList.add('open'); } }
+    });
+    document.getElementById('tree-count').textContent = q ? ('匹配 '+visibleCount+' 项') : (normalClasses+' 个类 / '+Object.keys(individuals).length+' 个个体');
+  }
+  document.getElementById('tree-search').addEventListener('input', applyTreeSearch);
+
+  const relBody = document.querySelector('#rel-table tbody');
+  function renderRelTable() {
+    relBody.innerHTML = '';
+    const rows = Object.values(objprops).filter(p => activeBranches.has(branchOf[p.domain]) || activeBranches.has(branchOf[p.range]));
+    rows.sort((a,b)=>(a.domain||'').localeCompare(b.domain||''));
+    rows.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.dataset.search = [p.zh,p.en,p.id,p.domain,p.range].filter(Boolean).join(' ').toLowerCase();
+      const dz = classes[p.domain]?(classes[p.domain].zh||p.domain):p.domain;
+      const rz = classes[p.range]?(classes[p.range].zh||p.range):p.range;
+      let badges = '';
+      if (p.functional) badges += '<span class="func-badge" title="FunctionalProperty">F</span>';
+      if (p.transitive) badges += '<span class="func-badge" style="background:var(--c2)" title="TransitiveProperty">T</span>';
+      if (p.symmetric) badges += '<span class="func-badge" style="background:var(--c5)" title="SymmetricProperty">S</span>';
+      let supCol = p.subPropertyOf ? '<span class="sup-badge mono">sub: '+p.subPropertyOf+'</span>' : '';
+      if (p.inverseOf) supCol += '<span class="sup-badge mono" style="color:var(--accent)">inv: '+p.inverseOf+'</span>';
+      if (p.chain) supCol += '<span class="sup-badge mono" style="color:var(--c3)">chain: '+p.chain.join(' ∘ ')+'</span>';
+      if (!supCol) supCol = '<span class="hint">&mdash;</span>';
+      tr.innerHTML = '<td><div>'+(p.zh||p.id)+badges+'</div><div class="mono" style="color:var(--ink-muted)">'+p.id+'</div></td>'+
+        '<td><span class="branch-tag"><span class="dot" style="background:'+(branchColor[branchOf[p.domain]]||'var(--ink-muted)')+'"></span>'+dz+'</span><span class="arrow-sep">&rarr;</span><span class="branch-tag"><span class="dot" style="background:'+(branchColor[branchOf[p.range]]||'var(--ink-muted)')+'"></span>'+rz+'</span></td>'+
+        '<td>'+supCol+'</td>';
+      relBody.appendChild(tr);
+    });
+    applyRelSearch();
+  }
+  function applyRelSearch() {
+    const q = document.getElementById('rel-search').value.trim().toLowerCase();
+    let n = 0;
+    relBody.querySelectorAll('tr').forEach(tr => { const show = !q || (tr.dataset.search||'').includes(q); tr.classList.toggle('hidden-node', !show); if (show) n++; });
+    document.getElementById('rel-count').textContent = n + ' / ' + Object.keys(objprops).length + ' 条关系';
+  }
+  document.getElementById('rel-search').addEventListener('input', applyRelSearch);
+
+  const dataBody = document.querySelector('#data-table tbody');
+  Object.values(dataprops).sort((a,b)=>(a.domain||'').localeCompare(b.domain||'')).forEach(p => {
+    const tr = document.createElement('tr');
+    const dz = classes[p.domain]?(classes[p.domain].zh||p.domain):p.domain;
+    tr.innerHTML = '<td><div>'+(p.zh||p.id)+(p.functional?'<span class="func-badge" title="FunctionalProperty">F</span>':'')+'</div><div class="mono" style="color:var(--ink-muted)">'+p.id+'</div></td>'+
+      '<td><span class="branch-tag"><span class="dot" style="background:'+(branchColor[branchOf[p.domain]]||'var(--ink-muted)')+'"></span>'+dz+'</span><span class="arrow-sep">&rarr;</span><span class="mono">'+p.range+'</span></td>';
+    dataBody.appendChild(tr);
+  });
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active'); document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    };
+  });
+
+  const dn = document.getElementById('disjoint-note');
+  const dnames = disjoints.map(g => g.map(id => (classes[id]?classes[id].zh:id)).join(' / '));
+  dn.innerHTML = '<b>互斥约束（'+disjoints.length+' 组，已用 HermiT 验证）：</b>' + dnames.map(s=>'「'+s+'」').join('，') + '。';
+
+  // ================= Network graph (force-directed) =================
+  (function () {
+    const svg = document.getElementById('netsvg');
+    const tooltip = document.getElementById('net-tooltip');
+    const NS_SVG = 'http://www.w3.org/2000/svg';
+    let W = svg.clientWidth || 900, H = 640;
+
+    const nodes = NET.nodes.map(n => Object.assign({}, n, {
+      x: W/2 + (Math.random()-0.5)*W*0.7, y: H/2 + (Math.random()-0.5)*H*0.7, vx:0, vy:0
+    }));
+    const idx = {}; nodes.forEach((n,i)=>idx[n.id]=i);
+    const edges = NET.edges.filter(e => idx[e.from]!==undefined && idx[e.to]!==undefined);
+
+    function tick() {
+      const REPULSE = 2600, SPRING = 0.02, SPRING_LEN = 130, CENTER = 0.006, DAMP = 0.82;
+      for (let i=0;i<nodes.length;i++){
+        let fx=0, fy=0;
+        for (let j=0;j<nodes.length;j++){
+          if (i===j) continue;
+          let dx = nodes[i].x-nodes[j].x, dy = nodes[i].y-nodes[j].y;
+          let d2 = dx*dx+dy*dy+0.01, d = Math.sqrt(d2);
+          let f = REPULSE/d2;
+          fx += (dx/d)*f; fy += (dy/d)*f;
+        }
+        fx += (W/2-nodes[i].x)*CENTER; fy += (H/2-nodes[i].y)*CENTER;
+        nodes[i].fx = fx; nodes[i].fy = fy;
+      }
+      edges.forEach(e => {
+        const a = nodes[idx[e.from]], b = nodes[idx[e.to]];
+        let dx=b.x-a.x, dy=b.y-a.y, d=Math.sqrt(dx*dx+dy*dy)+0.01;
+        let f = (d-SPRING_LEN)*SPRING;
+        let ux=dx/d, uy=dy/d;
+        a.fx += ux*f; a.fy += uy*f; b.fx -= ux*f; b.fy -= uy*f;
+      });
+      nodes.forEach(n => {
+        if (n.fixed) return;
+        n.vx = (n.vx + n.fx)*DAMP; n.vy = (n.vy + n.fy)*DAMP;
+        n.x += n.vx*0.06; n.y += n.vy*0.06;
+        n.x = Math.max(24, Math.min(W-24, n.x)); n.y = Math.max(24, Math.min(H-24, n.y));
+      });
+    }
+
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    const defs = document.createElementNS(NS_SVG,'defs');
+    defs.innerHTML = '<marker id="netarrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-muted)"></path></marker>' +
+      '<marker id="netarrowchain" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--c3)"></path></marker>';
+    svg.appendChild(defs);
+    const edgeLayer = document.createElementNS(NS_SVG,'g');
+    const nodeLayer = document.createElementNS(NS_SVG,'g');
+    svg.appendChild(edgeLayer); svg.appendChild(nodeLayer);
+
+    const edgeEls = edges.map(e => {
+      const path = document.createElementNS(NS_SVG,'path');
+      path.setAttribute('class', 'net-edge ' + e.kind);
+      if (e.kind === 'forward' || e.kind === 'bidir') path.setAttribute('marker-end','url(#netarrow)');
+      if (e.kind === 'chain') path.setAttribute('marker-end','url(#netarrowchain)');
+      edgeLayer.appendChild(path);
+      return { e, path };
+    });
+    const nodeEls = nodes.map(n => {
+      const g = document.createElementNS(NS_SVG,'g');
+      g.setAttribute('class','net-node');
+      g.style.cursor = 'grab';
+      const r = n.group==='hub' ? 15 : (n.group==='phenotype'?13:10);
+      const circle = document.createElementNS(NS_SVG,'circle');
+      circle.setAttribute('r', r);
+      circle.setAttribute('fill','var(--surface-1)');
+      circle.setAttribute('stroke','var(--' + GROUP_COLOR[n.group] + ')');
+      g.appendChild(circle);
+      const text = document.createElementNS(NS_SVG,'text');
+      text.setAttribute('text-anchor','middle'); text.setAttribute('y', -(r+5));
+      text.textContent = n.zh;
+      g.appendChild(text);
+      nodeLayer.appendChild(g);
+
+      let dragging = false, moved = false;
+      g.addEventListener('pointerdown', ev => { dragging = true; moved = false; n.fixed = true; g.setPointerCapture(ev.pointerId); });
+      g.addEventListener('pointermove', ev => {
+        if (!dragging) return;
+        moved = true;
+        const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+        const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+        n.x = loc.x; n.y = loc.y; n.vx = 0; n.vy = 0;
+      });
+      g.addEventListener('pointerup', () => { dragging = false; n.fixed = false; });
+      g.addEventListener('pointerenter', () => {
+        tooltip.style.display = 'block';
+        tooltip.innerHTML = '<b>' + n.zh + '</b>' + (n.en? ' <span style="color:var(--ink-muted)">'+n.en+'</span>':'') + '<div class="mono" style="color:var(--ink-muted);margin-top:2px">#' + n.id + '</div>';
+        edgeEls.forEach(({e,path}) => { path.style.opacity = (e.from===n.id||e.to===n.id) ? 1 : 0.12; });
+        nodeEls.forEach(o => { o.g.style.opacity = (o.n===n || edges.some(e=>(e.from===n.id&&e.to===o.n.id)||(e.to===n.id&&e.from===o.n.id))) ? 1 : 0.35; });
+      });
+      g.addEventListener('pointermove', ev => {
+        const rect = svg.getBoundingClientRect();
+        tooltip.style.left = (ev.clientX - rect.left + 14) + 'px';
+        tooltip.style.top = (ev.clientY - rect.top + 10) + 'px';
+      });
+      g.addEventListener('pointerleave', () => {
+        tooltip.style.display = 'none';
+        edgeEls.forEach(({path}) => path.style.opacity = '');
+        nodeEls.forEach(o => o.g.style.opacity = '');
+      });
+      return { n, g, circle };
+    });
+
+    function curvedPath(x1,y1,x2,y2,curve) {
+      const mx=(x1+x2)/2, my=(y1+y2)/2;
+      const dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy)||1;
+      const nx=-dy/len, ny=dx/len;
+      const cx=mx+nx*curve, cy=my+ny*curve;
+      return 'M '+x1.toFixed(1)+' '+y1.toFixed(1)+' Q '+cx.toFixed(1)+' '+cy.toFixed(1)+' '+x2.toFixed(1)+' '+y2.toFixed(1);
+    }
+
+    let frame = 0;
+    function render() {
+      frame++;
+      const settle = frame < 260;
+      if (settle) tick();
+      edgeEls.forEach(({e,path}) => {
+        const a = nodes[idx[e.from]], b = nodes[idx[e.to]];
+        const curve = e.kind === 'chain' ? 40 : (e.kind === 'subclass' ? 0 : 14);
+        path.setAttribute('d', curvedPath(a.x,a.y,b.x,b.y,curve));
+      });
+      nodeEls.forEach(({n,g}) => { g.setAttribute('transform','translate('+n.x.toFixed(1)+','+n.y.toFixed(1)+')'); });
+      if (settle || nodes.some(n=>n.fixed)) requestAnimationFrame(render);
+    }
+    render();
+
+    document.getElementById('net-reset').onclick = () => {
+      nodes.forEach(n => { n.x = W/2+(Math.random()-0.5)*W*0.7; n.y = H/2+(Math.random()-0.5)*H*0.7; n.vx=0; n.vy=0; n.fixed=false; });
+      frame = 0; render();
+    };
+
+    // zoom
+    let scale = 1;
+    svg.addEventListener('wheel', ev => {
+      ev.preventDefault();
+      scale = Math.max(0.5, Math.min(2.5, scale * (ev.deltaY < 0 ? 1.08 : 0.93)));
+      nodeLayer.setAttribute('transform', 'translate(' + (W/2*(1-scale)) + ',' + (H/2*(1-scale)) + ') scale(' + scale + ')');
+      edgeLayer.setAttribute('transform', nodeLayer.getAttribute('transform'));
+    }, { passive: false });
+  })();
+
+  renderLegend();
+  renderTree();
+  renderRelTable();
+})();
+
+(function () {
+  const KEY = 'ontologyReviewNotes_v1';
+  const fab = document.getElementById('notes-fab');
+  const panel = document.getElementById('notes-panel');
+  const closeBtn = document.getElementById('notes-close');
+  const textarea = document.getElementById('notes-text');
+  const copyBtn = document.getElementById('notes-copy');
+  const clearBtn = document.getElementById('notes-clear');
+  const status = document.getElementById('notes-status');
+
+  try { textarea.value = localStorage.getItem(KEY) || ''; } catch (e) {}
+
+  function save() {
+    try { localStorage.setItem(KEY, textarea.value); } catch (e) {}
+    status.textContent = '已自动保存到本机浏览器 · ' + new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  }
+  let saveTimer;
+  textarea.addEventListener('input', () => { clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); });
+
+  fab.addEventListener('click', () => { panel.classList.add('open'); fab.style.display = 'none'; textarea.focus(); });
+  closeBtn.addEventListener('click', () => { panel.classList.remove('open'); fab.style.display = ''; });
+
+  copyBtn.addEventListener('click', async () => {
+    const text = textarea.value.trim();
+    if (!text) { status.textContent = '备注为空'; return; }
+    try {
+      await navigator.clipboard.writeText(text);
+      status.textContent = '已复制到剪贴板';
+    } catch (e) {
+      textarea.select();
+      status.textContent = '自动复制失败，已全选文本，可手动 Cmd/Ctrl+C 复制';
+    }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    if (!textarea.value || confirm('确认清空已记录的备注？')) {
+      textarea.value = ''; save(); status.textContent = '已清空';
+    }
+  });
+})();
+</script>
+</body>
+</html>
